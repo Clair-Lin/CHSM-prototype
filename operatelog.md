@@ -82,3 +82,4 @@
 - `GroupAuthorizeEmbed.vue`：内嵌「新增授权」改为引用 `AddAuthorizedOrgDialog`，去掉重复弹窗 DOM 与样式。
 - `VirtualHsmManagement.vue`：克隆向导授权改为仅打开 `AddAuthorizedOrgDialog`（不再包一层「分组授权机构」大弹窗 + `GroupAuthorizeEmbed`）；关闭时 `watch` 清空 `cloneAuthorizeEmbedGroupId`；`npm run build` 通过。
 - `CryptoDeviceResources.vue` / `CloudHsmMediaManagement.vue` / `VirtualHsmManagement.vue`：分别将「新增设备分组」「导入虚拟机影像」「克隆第三步-新增设备分组」弹窗内每行标签与输入/下拉框文字统一为 `12px`（限定在各自弹窗 class 下覆盖，避免影响全局样式）。
+- `src/router/index.js`：路由 history 模式由 `createWebHistory()` 调整为 hash 模式 `createWebHashHistory()`，访问路径改为 `/#/...` 形式，便于静态托管场景直接刷新页面不依赖服务端回退配置。
