@@ -1,0 +1,84 @@
+# 操作记录（CHSM-prototype）
+
+## 2026-04-13
+
+- 新建 Vue 3 + Vite + Vue Router + Element Plus 原型工程 `CHSM-prototype`（`package.json`、`vite.config.js`、`index.html`）。
+- 按《设计规范提示词模板》在 `src/App.vue` 配置全局 CSS 变量、基础重置与 Element Plus 主色/表格/分页等全局覆盖。
+- 新增 `src/components/Layout.vue`：顶栏（品牌区、版本号 1.5.0、全屏、用户下拉占位）、侧栏菜单（含收起宽度切换）、主内容区 `router-view`；菜单数据来源于 `src/config/menu.js`。
+- 新增 `src/router/index.js`：默认重定向至 `/welcome`；为需求所列全部菜单路径配置路由；业务页统一挂载 `ModulePlaceholder.vue` 占位，元信息用于面包屑。
+- 新增 `src/views/HomeWelcome.vue`：首页欢迎区（WELCOME +「欢迎使用云服务器密码机」+ 轻量 SVG 插画与背景装饰）。
+- 新增 `src/views/ModulePlaceholder.vue`：标准页面骨架（面包屑 + 页面标题 + 白底内容卡片 + 占位说明）。
+- 新增 `.gitignore`（忽略 `node_modules`、`dist` 等）。
+- 已在本地执行 `npm install` 与 `npm run build`，构建通过。
+- 在 `src/access/icon/` 新增 10 个侧栏 SVG 图标组件（监测概览、机构管理、密码设备资源、云密码机、虚拟机集群、镜像、密钥、日志、系统、关于）；`src/config/menu.js` 改为引用上述组件；`Layout.vue` 侧栏使用 `<component :is="item.icon" />`，顶栏仍使用 Element Plus 图标按需导入。
+- `Layout.vue`：侧栏 `.nav-icon` 由固定 `var(--neutral-8)` 改为 `color: inherit`；在 `.nav-menu .nav-icon` 内对 `svg`/`path` 设 `fill: currentColor`，使自定义菜单图标与文字在默认、悬停、激活、展开等状态下同色，且不影响底部收起区的 Element 图标。
+- 因原路径目录被占用无法直接 `Move-Item`，已使用 `robocopy` 将完整工程复制到 `D:\WORK\CHSM-prototype`；请在 Cursor 中改打开该文件夹作为工作区，确认无误后可手动删除原临时路径下的旧目录。
+- 密码设备资源：`src/mock/cryptoDeviceResourceMock.js` 提供分组/设备/授权机构原型数据与增删移出等本地变更方法。
+- `src/views/crypto-device/CryptoDeviceResources.vue`：列表筛选（分组名称、设备IP、厂商、设备类型）、分页、「新增分组」弹窗（厂商 olym/OLYM_XSIGN；设备类型 时间戳服务器/签名验签服务器/云服务器密码机）、表格操作「查看分组 / 编辑(占位) / 授权 / 删除」。
+- `src/views/crypto-device/CryptoDeviceGroupDetail.vue`：密码资源管理详情；面包屑置于页顶（顺序、间距对齐 `CryptoDeviceResources.vue`：先面包屑再 `h1.page-title`）；页背景 `var(--neutral-1)`；主标题与面包屑外置，其余在 `detail-main-board` 内以 `broad-bottom`/`broad-top` 分隔；系统分组（`g-sys`）设备行展开为五列键值详情，其余分组仍为占位文案；面包屑恢复「密码设备资源管理 / 密码资源管理详情」。
+- `cryptoDeviceResourceMock.js`：系统分组 5 台设备 IP 与稿一致（209/207/205/202/200），`expandColumns` + `SYSTEM_GROUP_ID` 常量；`npm run build` 通过。
+- `CryptoDeviceGroupDetail.vue`：操作列单行展示（`ops-row` + `ops-cell` 不换行）；设备操作下拉仅「上架 / 下架」互斥项，联动 `setDeviceShelfStatus` 与资源状态；`cryptoDeviceResourceMock.js` 新增 `setDeviceShelfStatus`；`npm run build` 通过。
+- `src/views/crypto-device/CryptoDeviceGroupAuthorize.vue`：分组摘要与授权机构表（筛选、勾选占位）；自列表「授权」跳转。
+- `src/router/index.js`：上述三页路由；`Layout.vue`：`/crypto-device/resources` 子路径下保持侧栏「密码设备资源管理」高亮。
+- 已执行 `npm run build`，构建通过。
+- 面包屑：去掉顶层「云服务器密码机」；`CryptoDeviceResources` / `CryptoDeviceGroupDetail` / `CryptoDeviceGroupAuthorize` / `ModulePlaceholder` 改为从业务路径起算。
+- 密码设备列表：列名改为「分组编号」；内置行（系统分组、未分配分组）编号/厂商/设备类型显示 `--`；新增「未分配分组」且类型为「未指定分组」；`builtin` 字段控制仅「查看分组」；筛选厂商/设备类型时隐藏无该字段的内置行；示例数据调整为 9 行（2 内置 + 3 olym 云密码机 + 4 OLYM_XSIGN 签名验签）。
+- 再次执行 `npm run build`，构建通过。
+- `CryptoDeviceResources.vue`：列表区去左右外边距（`table-card` 零内边距、表格全宽）；表格去 `border`/`stripe`，仅保留横向分隔线，无列竖线与表格外左右竖线；表头背景 `#f5f5f5`、数据行白底；分页去掉 `jumper` 与 `background`，每页条数 `10/20/30/50/100`，页码与前后钮 `4px` 圆角、条数选择器主色描边，类名 `resource-pager` 覆盖全局分页内边距；`npm run build` 通过。
+- 虚拟密码机管理：`src/mock/virtualHsmMock.js` 提供 11 条原型数据（序列号、名称、IPv4、镜像类型、版本、宿主机「云机」、厂商 olym、状态正常）；`src/views/cloud-hsm/VirtualHsmManagement.vue` 实现与稿一致的筛选（名称、IP）、工具栏（虚拟机自动上架、新增、批量删除）、多选表格、操作列（详情/编辑/更多操作下拉：启动至操作记录等）、分页；`src/router/index.js` 将 `/cloud-hsm/virtual-hsm` 由占位改为该组件；`npm run build` 通过。
+- `VirtualHsmManagement.vue`：筛选区用 flex 保证「标签+输入」同行；工具栏拆为两行（第一行自动上架+帮助问号，第二行新增/批量删除且批量删除为 primary plain）；操作列用 `ops-row` 单行排列详情、编辑、更多操作（触发器改为文字链样式避免与编辑重叠），下拉 `popper-class` 菜单项蓝色字；重置按钮主色描边样式；`npm run build` 通过。
+- `virtualHsmMock.js`：序列号/名称为长串（`…-92dc-459e-a65b-xxxxxxxxxxxx`）且二者相同；`VirtualHsmManagement.vue`：序列号、名称列 `class-name="col-wrap"` + `cell-multiline` 允许单元格内换行；IP 列展示 `IPV4:` / `IPV6:` 两行；`npm run build` 通过。
+- `CryptoDeviceGroupAuthorize.vue`：与详情页一致——顶栏面包屑（密码设备资源管理 / 密码资源授权机构）+ 页标题；白底 `detail-main-board` 内返回+「分组名」分组授权机构、分组信息/授权机构信息竖条标题与 `broad-bottom` 分隔；筛选「机构名称」「状态（全部/启用/停用）」；表格无竖线斑马纹、灰表头、`resource-pager`；列名「机构代号」；机构状态展示「启用」与圆点。
+- `cryptoDeviceResourceMock.js`：示例授权行 `orgStatus` 由「已启用」改为「启用」；`npm run build` 通过。
+- 影像管理：`src/mock/vmImageMock.js` 提供虚拟机影像列表原型数据与状态元数据；新增 `src/views/cloud-hsm/CloudHsmMediaManagement.vue`（面包屑「云密码机管理 / 影像管理 / …」、四个 Tab、虚拟机影像管理：筛选「影像名称」「虚拟机密码机名称」、上传影像、表格含状态绿点与「导入影像/删除」、分页样式对齐虚拟密码机列表）；`src/router/index.js` 将 `/cloud-hsm/media` 由占位改为该组件；`VirtualHsmManagement.vue` 更多操作中「导入影像」跳转至 `/cloud-hsm/media`（`tab=vm-image` 入参后由页面归一化 URL），并将更多菜单中导入/导出文案改为「导入影像」「导出影像」；`npm run build` 通过。
+- `CloudHsmMediaManagement.vue`：筛选区改为透明无阴影条（`filter-strip`）并收紧表单项间距与左对齐；分页移出表格白底卡片、`pager-wrap` 透明无底色；备注空值显示「—」；「导入影像」先 `ElMessageBox.confirm`（标题「温馨提示」、警告文案与图2一致），确定后打开「导入虚拟机影像」对话框（顶栏浅灰、必填虚拟机 `el-select`，选项来自 `VIRTUAL_HSM_ROWS` 的 `名称 (IP: …)`）；`npm run build` 通过。
+- `CloudHsmMediaManagement.vue`：`filter-strip` 恢复白底与 `shadow-1`，左右内边距 15px 与表格工具栏对齐；表单去默认外边距并收紧 `label-wrap`；列表/筛选「虚拟机密码机名称」文案与稿一致改为「虚拟密码机名称」；分页区仍保持透明无底色；`npm run build` 通过。
+- 新增 `src/mock/importVmDialogScopeMock.js`（机构、分组及与 `VIRTUAL_HSM_ROWS` 的 id 绑定）；`CloudHsmMediaManagement.vue`「导入虚拟机影像」弹窗增加机构、分组下拉：切换机构仅展示该机构下分组并回退到合法分组与虚拟机；切换分组仅展示该机构+分组下虚拟机并回退默认选中；确定时校验三项；`npm run build` 通过。
+- `importVmDialogScopeMock.js` 改为「虚拟机→分组→分组下机构」：`IMPORT_VM_SCOPES` 仅保留 `groupId`，`IMPORT_GROUP_ORGS` 描述各分组可选机构；弹窗字段顺序与联动同步调整（选虚拟机后带出所属分组选项、选分组后仅展示该分组下机构；清空虚拟机时清空分组/机构）；`npm run build` 通过。
+- `importVmDialogScopeMock.js`：增加受控 VSM 集合 `IMPORT_CONTROL_VSM_IDS` 与 `groupHasAtLeastOneControlVsm` / `getVmGroupId` / `isVmImportEligible`；分组须含至少 1 台受控 VSM；`IMPORT_GROUP_ORGS` 各分组补充多机构示例；开发态自检 `IMPORT_VM_SCOPES` 与 `VIRTUAL_HSM_ROWS` 对齐；`CloudHsmMediaManagement.vue` 虚拟机下拉仅 eligible 行、分组与 `getVmGroupId` 一致且通过受控校验、确定时二次校验；机构下增加多机构说明文案；`npm run build` 通过。
+- `virtualHsmMock.js`：为每台虚拟密码机增加 `resourceOnShelf`（示例 v8/v9 为未上架）；`CloudHsmMediaManagement.vue` 导入弹窗在未上架时分组/机构禁用并展示「系统未上架，无需选择密码资源分组」，确定时跳过分组/机构校验；`npm run build` 通过。
+- `cryptoDeviceResourceMock.js`：为 `g-hsm2`/`g-hsm3` 补全与虚拟密码机 IPv4 对应的设备行；`initialAuth` 增加 `g-sys`、`g-hsm2`、`g-hsm3` 授权机构（与授权页同源）；`importVmDialogScopeMock.js` 改为按 IP 解析 `devicesByGroupId` 得到分组、`listAuthorizedForGroup` 得到机构选项，移除独立 `IMPORT_VM_SCOPES`/`IMPORT_GROUP_ORGS`；`CloudHsmMediaManagement.vue` 分组用 `findGroupById`、确定时校验机构在授权列表内；`npm run build` 通过。
+- 机构管理：`src/mock/organizationMock.js` 提供 4 条原型机构（zhangj / liyn / test2 / 内置机构）与 `setOrganizationStatus`；`src/views/organization/OrganizationManagement.vue` 实现筛选（机构名称、状态）、「新增机构」、表格列与稿一致（含机构状态绿点、操作编辑/禁用|启用/重置密码）、分页；`/organization` 路由由占位改为该组件；`npm run build` 通过。
+- 导入影像机构与机构管理对齐：`g-import` 更名为「密钥密码机分组」并增加设备 192.168.212.201（v2），授权改为机构代号 `zhangj`；新增 `g-test2`「test2分组」设备 192.168.212.203（v4）、授权 `test2`；`g-hsm2` 仅保留 204/206 设备；`g-sys`/`g-hsm2`/`g-hsm3` 授权改为与 `organizationMock` 一致（chsm、liyn、org-rd-dedicated）；`organizationMock` 中 test2 代号改为 `test2` 并增加「研发专用机构」；`importVmDialogScopeMock` 下拉为「分组授权 ∩ 机构管理启用」并导出 `isOrgAuthorizedAndManaged`；`CloudHsmMediaManagement` 确定时沿用该校验；`IMPORT_CONTROL_VSM_IDS` 含 v4；`npm run build` 通过。
+- `virtualHsmMock.js`：导出 `getVirtualHsmDetail(row)`，合并列表字段与规格/使用率/端口/网口表（eth3～eth0，eth0 的 IP/掩码/网关与列表 IPv4 及推导网关一致，其余 `--`）；`VirtualHsmManagement.vue`：点击「详情」打开 `el-dialog`「查看详情」（顶栏浅灰、基础信息键值、CPU/内存 `el-progress`、描述、左右两列元数据、网口表格 IPV4/IPV6 双行、底部仅「取消」）；补全 `const router = useRouter()`；`npm run build` 通过。
+- `VirtualHsmManagement.vue` 详情弹窗：CPU/内存进度条与左侧标签同一 `detail-kv` 栅格，`.detail-progress-wrap` 用 `--vsm-detail-progress-w`（默认 400px）限制条形容器最大宽度，双条一致；轨道浅灰、内外条圆角胶囊；CPU 为绿色 `text-inside`；`virtualHsmMock.js` 详情示例 CPU 4.8%、内存 62.61%、752.74 MB；`npm run build` 通过。
+- `VirtualHsmManagement.vue`：批量删除改为 `btn-batch-delete`（浅蓝底 `primary-light-9`、主色描边与文字，悬停 `light-8`）；操作列用 `--vsm-ops-color`/`--vsm-ops-hover` 统一详情、编辑、`更多操作` 及箭头图标色；`vsm-more-dropdown` 菜单项 `flex` 居中、`min-width` 略增；`npm run build` 通过。
+- `VirtualHsmManagement.vue`：操作列 `--vsm-ops-color` 改为 `var(--brand-6)`、悬停 `var(--brand-5)`，与 `App.vue` 表格内 `el-button` 链接色一致，消除「更多操作」偏亮；链接按钮补 `!important` 与全局规则对齐；`npm run build` 通过。
+- `VirtualHsmManagement.vue`：更多操作「迁移」打开三步向导弹窗（`el-steps`：确认信息 / 选择目标 / 完成）；第 1 步异步加载约 650ms 后展示 `getVirtualHsmDetail` 规格与键值信息；第 2 步选择目标虚拟机（排除当前行，选项与导入影像同源 `isVmImportEligible`），并增加「分组名称」「机构名称」下拉及未上架提示、联动与校验逻辑（`getVmGroupId`、`findGroupById`、`listAuthorizedOrgSelectOptions`、`isOrgAuthorizedAndManaged` 等与 `CloudHsmMediaManagement.vue` 导入影像一致）；第 3 步 `el-result` 展示提交摘要；`npm run build` 通过。
+- `VirtualHsmManagement.vue`：迁移向导弹窗视觉优化——宽度改为 600px，头/体/脚内边距收紧；步骤条与副标题间距缩小；确认页去掉独立「规格」灰条，将「规格」作为首行键值与图2一致，`formatMigrateSpecLine` 规范空白；KV 栅格 100px + 8px 间距、行距收紧；第 2 步表单全宽、表单项间距略减；`npm run build` 通过。
+- `VirtualHsmManagement.vue`：迁移弹窗去掉 Element Plus 根节点 `.el-dialog` 默认 `--el-dialog-padding-primary`（非 scoped 中 `.vsm-migrate-dialog.el-dialog { padding:0; overflow:hidden }`），消除标题区左上角与边框之间多余留白；头部改为自管 `padding` 并微调关闭钮位置；`npm run build` 通过。
+- `VirtualHsmManagement.vue`：迁移向导 `el-steps` 改为 `finish-status="finish"`（已完成步保留序号、不出现绿勾）；步骤条样式对齐稿——当前/已完成为实心主色圆+白字、未走步为浅灰描边+灰字、连线底条浅灰+已走过段主色；标题 12px、与圆标间距约 6px；去掉 scoped 中误写在 `.vsm-migrate-dialog` 上的品牌色底（避免整弹窗铺色）；`npm run build` 通过。
+- `virtualHsmMock.js`：为部分虚拟机增加 `hasCryptoData`（含数据不可作迁移目标，示例 v2/v5/v10）；`VirtualHsmManagement.vue`：迁移第 2 步目标机改为只读输入+「…」按钮打开嵌套 `el-dialog`「选择虚拟机」（`append-to-body`、表格单选、`hasCryptoData` 或 `!isVmImportEligible` 时 `el-radio` 禁用）、筛选与分页、「已选 n 个虚拟机」、确定回写主流程；主流程「下一步」增加含数据校验；`migrate-vm-picker-dialog` 去根 padding；`npm run build` 通过。
+- `VirtualHsmManagement.vue`：「选择虚拟机」表格（含版本列、单选+序列号 `fixed="left"`、筛选同行等）错位修复：`migrate-vm-picker-dialog` 的 `el-dialog__body` 改为 `overflow-x:hidden`+`overflow-y:auto`，避免 body 横向滚动带动整块表导致固定列失效；去掉 `native-scrollbar`；`el-radio-group` 使用 `display:contents`；`migrate-picker-table` 恢复 `border-patch` 显示及表内横向滚动条样式；`npm run build` 通过。
+- `VirtualHsmManagement.vue`：「选择虚拟机」表头/表体横向错位进一步处理——去掉包裹 `el-table` 的 `el-radio-group`（改为同 `name` 的原生 `radio` + `onMigratePickerNativeRadioChange`），避免组件层干扰表格布局与 `ResizeObserver`；表格增加 `max-height="420"` 与 `scrollbar-always-on`，在表内预留纵向滚动条 gutter，与表头列宽对齐；`npm run build` 通过。
+- `VirtualHsmManagement.vue`：迁移向导 `el-steps` 字体调大——步骤标题 `14px`、行高 `1.35`、与圆间距 `8px`；序号圆 `28×28`、`14px`；连线 `top:14px`；各步内容区副标题保持 `16px`；`npm run build` 通过。
+- `VirtualHsmManagement.vue`：迁移第 2 步「目标虚拟机 / 分组 / 机构」表单统一 `12px`——`migrate-pick-form` 内对 `el-form-item__label`、`__content`、`el-input`/`el-select` 内层及占位符等 `:deep` 覆盖 Element 默认字号；选择按钮 `12px`；`npm run build` 通过。
+- `VirtualHsmManagement.vue`：更多操作「克隆」打开四步向导 `el-dialog`（`vsm-clone-dialog`，样式与迁移弹窗共用根/头/体/脚规则）：步骤为确认虚拟机信息 / 选择目标宿主机 / 克隆虚拟机 / 完成；第 1 步加载后展示 `buildCloneConfirmDetail`（`getVirtualHsmDetail` + `getVmGroupId`/`findGroupById` 解析所属分组、规格示例 4GB）；版本行悬停浅蓝底；第 2 步标题「请选择新虚拟机所在的宿主机」、必填「目标宿主机」`el-select`（选项文案 `名称 (版本: x)`，与迁移第 2 步共用 `migrate-pick-form` 12px）；进入第 2 步默认选中首个宿主机、「下一步」未选时禁用；第 3 步标题「填写新虚拟机信息」、`el-alert` 提示「克隆前请先新建分组并授权给指定机构」；表单项：IP 分配（随机/自定义）、必填 IP 池（占位符「请选择IP池选择」）、自定义时必填 IP 地址、必填「选择分组」（仅展示无设备的非内置自定义分组）；无空分组时下拉禁用并说明文案，提供「新建分组」链接触发 `append-to-body` 的「新增设备分组」弹窗（与密码设备资源页同源字段与 `addCustomGroup`），确定后自动选中新分组；第 3 步「下一步」校验 IP 池/自定义 IP/分组；第 4 步 `el-result` 副标题带目标分组名；`virtualHsmMock.js` 增加 `CLONE_IP_POOLS`；`npm run build` 通过。
+
+## 2026-04-14
+
+- 新增 `src/mock/ipPoolMock.js`：`IP_POOL_INITIAL_ROWS` 默认 1 条（212网段，与稿图列表一致）、`IP_POOL_CLONE_EXTRA_ROWS` 供克隆下拉扩展池、`toCloneIpPoolOptions` / `getDefaultCloneIpPoolOptions`。
+- 新增 `src/views/cloud-hsm/IpPoolManagement.vue`：面包屑与标题「IP池管理」、筛选「IP池名称」+ 查询/重置、工具栏「新增」、表格列（开始/结束 IP、网关、子网掩码、状态绿点、创建时间、编辑/删除）、分页样式对齐影像/虚拟密码机列表；新增/编辑 `el-dialog`（顶栏浅灰）与 IPv4 校验；本地增删改提示为原型数据。
+- `src/router/index.js`：`/cloud-hsm/ip-pool` 由占位改为 `IpPoolManagement` 组件。
+- `virtualHsmMock.js`：`CLONE_IP_POOLS` 改为 `getDefaultCloneIpPoolOptions()`，与 IP 池 mock 同源；`npm run build` 通过。
+- `ipPoolMock.js`：改为导出响应式 `ipPoolResourceMock.rows`（初始自 `IP_POOL_INITIAL_ROWS`），`IpPoolManagement` 与克隆向导共用；`listCloneIpPoolSelectOptions()` 从当前列表按启用状态派生下拉项；删除与列表脱节的 `IP_POOL_CLONE_EXTRA_ROWS` / `getDefaultCloneIpPoolOptions`。
+- `IpPoolManagement.vue`：列表增删改改为直接操作 `ipPoolResourceMock.rows`。
+- `cryptoDeviceResourceMock.js`：新增 `listEmptyCustomGroupsForClone()`，与密码设备资源管理同源分组数据。
+- `VirtualHsmManagement.vue`：克隆第 3 步 IP 池选项改为 `computed` + `listCloneIpPoolSelectOptions()`；空分组列表改为 `listEmptyCustomGroupsForClone()`；仅当不存在空自定义分组时显示「新建分组」按钮。
+- `virtualHsmMock.js`：移除对 `ipPoolMock` 的导入及 `CLONE_IP_POOLS` 导出。
+- `npm run build` 通过。
+- 密码设备资源：`cryptoDeviceResourceMock.js` 增加 `countDevicesInGroup`（基于 `devicesByGroupId` 长度）；分组对象去掉冗余 `deviceCount` 字段；为原仅有数字无设备的 `g6` / `g-svs1` / `g-svs2` 补全 `mkSvsDevice` 原型设备列表；`removeDeviceFromGroup` 不再写回 `deviceCount`。
+- `CryptoDeviceResources.vue`：表格「设备数量」列改为 `countDevicesInGroup(row.id)`，与详情列表联动。
+- `CryptoDeviceGroupDetail.vue`、`CryptoDeviceGroupAuthorize.vue`：分组信息「设备数量」改为计算属性 `groupDeviceCount`；`npm run build` 通过。
+- `CryptoDeviceGroupDetail.vue`：分组信息补全字段（设备能力、设备类型、厂商、创建时间）并与原有三项同一行展示（`info-row--single-line`：`flex-wrap:nowrap` + 横向滚动保证长文案完整可见）；密码设备信息筛选区增加 `device-filter-form` 样式，标签与输入/下拉同一行对齐；返回图标改为与脚本一致的 `ArrowLeft`；`npm run build` 通过。
+- `VirtualHsmManagement.vue`：克隆向导第 3 步「新建分组」由 `link` 文字链改为 `type="primary"` + `size="small"` 实心按钮，类名 `clone-new-group-btn`；`npm run build` 通过。
+- `VirtualHsmManagement.vue`：克隆流程「新增设备分组」弹窗中设备类型由源虚拟机 `imageLabel` 映射（与 `DEVICE_TYPE_OPTIONS` 一致），打开弹窗时写入且下拉 `disabled`，保证与原虚拟机类型一致；`npm run build` 通过。
+- `VirtualHsmManagement.vue` / `CryptoDeviceResources.vue`：「新增设备分组」`el-dialog` 根节点 `padding:0` 消除 Element 默认外圈大块留白，头/体/脚内边距与迁移/克隆主弹窗对齐；表单增加 `device-group-create-form`，分组名称 `el-input` 与厂商/设备类型 `el-select` 统一 `width:100%`；密码设备资源页弹窗增加 `crypto-create-group-dialog` 与 `align-center`；`npm run build` 通过。
+- `cryptoDeviceResourceMock.js`：新增 `appendAuthorizedOrgsForGroup`，按机构管理字段写入授权行并跳过已存在 `orgCode`。
+- `CryptoDeviceGroupAuthorize.vue`：「新增授权机构」改为 `el-dialog`（顶栏浅灰）：左侧约 3/4 为机构名称+状态筛选（标签与控件同行）、查询/重置、多选表格（`reserve-selection`）、分页；右侧约 1/4 竖线分隔，标题「已选 *n* 个机构」数字主色危险红，空态「无选择的机构!」，已选展示机构名称列表；确定调用 `appendAuthorizedOrgsForGroup` 写入本分组授权；候选为 `organizationMock` 非内置且未授权本分组；`npm run build` 通过。
+- `CryptoDeviceGroupAuthorize.vue`：本页所有筛选区（主列表「授权机构信息」、弹窗左侧筛选）及筛选/工具栏/弹窗底栏按钮统一 `12px`（`auth-search-form`、`auth-toolbar-actions`、分页 `resource-pager`、`.add-auth-picker-pager`、`.add-auth-dialog` 页脚按钮等 `:deep` 覆盖）；`npm run build` 通过。
+- `CryptoDeviceGroupAuthorize.vue`：「分组信息」由多列 `info-grid` 改为与详情页一致的 `info-row--single-line` 单行展示（字段过长时横向滚动）；`npm run build` 通过。
+- `AddAuthorizedOrgDialog.vue`：抽取「新增授权机构」弹窗（筛选、多选表、已选侧栏、确定写入 `appendAuthorizedOrgsForGroup`），`v-model` 控制显隐，`@success` 在写入后触发。
+- `GroupAuthorizeEmbed.vue`：内嵌「新增授权」改为引用 `AddAuthorizedOrgDialog`，去掉重复弹窗 DOM 与样式。
+- `VirtualHsmManagement.vue`：克隆向导授权改为仅打开 `AddAuthorizedOrgDialog`（不再包一层「分组授权机构」大弹窗 + `GroupAuthorizeEmbed`）；关闭时 `watch` 清空 `cloneAuthorizeEmbedGroupId`；`npm run build` 通过。
+- `CryptoDeviceResources.vue` / `CloudHsmMediaManagement.vue` / `VirtualHsmManagement.vue`：分别将「新增设备分组」「导入虚拟机影像」「克隆第三步-新增设备分组」弹窗内每行标签与输入/下拉框文字统一为 `12px`（限定在各自弹窗 class 下覆盖，避免影响全局样式）。
