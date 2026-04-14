@@ -83,3 +83,6 @@
 - `VirtualHsmManagement.vue`：克隆向导授权改为仅打开 `AddAuthorizedOrgDialog`（不再包一层「分组授权机构」大弹窗 + `GroupAuthorizeEmbed`）；关闭时 `watch` 清空 `cloneAuthorizeEmbedGroupId`；`npm run build` 通过。
 - `CryptoDeviceResources.vue` / `CloudHsmMediaManagement.vue` / `VirtualHsmManagement.vue`：分别将「新增设备分组」「导入虚拟机影像」「克隆第三步-新增设备分组」弹窗内每行标签与输入/下拉框文字统一为 `12px`（限定在各自弹窗 class 下覆盖，避免影响全局样式）。
 - `src/router/index.js`：路由 history 模式由 `createWebHistory()` 调整为 hash 模式 `createWebHashHistory()`，访问路径改为 `/#/...` 形式，便于静态托管场景直接刷新页面不依赖服务端回退配置。
+- `CloudHsmMediaManagement.vue`：导入虚拟机影像弹窗中「虚拟机」改为与迁移流程一致的选择样式（只读输入框 + `...` 选择按钮 +「选择虚拟机」弹窗），并复用同风格筛选栏、单选表格与分页；虚拟机候选内容与既有导入逻辑保持一致（仍基于 `isVmImportEligible`）。
+- `VirtualHsmManagement.vue` / `CloudHsmMediaManagement.vue`：迁移与导入弹窗增加提示文案「勾选虚拟机自动上架后才需选择分组/机构，未勾选为非必填」；分组、机构字段均改为非必填（仅在启用自动上架时执行必需校验）；两处“选择虚拟机”弹窗表格新增「所属分组」列（按 `getVmGroupId + findGroupById` 展示）；并将“虚拟机自动上架”勾选状态通过 `localStorage(CHSM_AUTO_SHELF_ENABLED)` 在页面间共享。
+- `VirtualHsmManagement.vue` / `CloudHsmMediaManagement.vue`：按交互调整为「分组由虚拟机自动带出且置灰不可选，机构保持可选」；分别将分组下拉改为禁用态，机构下拉改为独立禁用条件（仅在无可选机构或未选虚拟机/未上架时禁用）。

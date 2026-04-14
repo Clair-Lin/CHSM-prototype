@@ -345,27 +345,28 @@
               </el-button>
             </div>
           </el-form-item>
-          <el-form-item label="分组名称" :required="migrateTargetResourceOnShelf">
+          <el-form-item label="分组名称">
             <el-select
               v-model="migrateGroupId"
               placeholder="请选择分组"
               filterable
-              :disabled="migrateGroupOrgDisabled"
+              disabled
               class="migrate-pick-select"
             >
               <el-option v-for="opt in migrateGroupSelectOptions" :key="opt.id" :label="opt.label" :value="opt.id" />
             </el-select>
           </el-form-item>
-          <el-form-item label="机构名称" :required="migrateTargetResourceOnShelf">
+          <el-form-item label="机构名称">
             <el-select
               v-model="migrateOrgId"
               placeholder="请选择机构"
               filterable
-              :disabled="migrateGroupOrgDisabled || !migrateGroupId || !migrateOrgSelectOptions.length"
+              :disabled="migrateOrgDisabled"
               class="migrate-pick-select"
             >
               <el-option v-for="opt in migrateOrgSelectOptions" :key="opt.id" :label="opt.label" :value="opt.id" />
             </el-select>
+            <p class="migrate-field-hint">提示：勾选“虚拟机自动上架”后才需要选择分组和机构，未勾选为非必填。</p>
           </el-form-item>
           <div v-if="migrateTargetVmId && !migrateTargetResourceOnShelf" class="migrate-shelf-tip-wrap">
             <p class="migrate-shelf-tip">系统未上架，无需选择密码资源分组</p>
@@ -538,7 +539,7 @@
                 />
               </el-select>
               <p v-if="!cloneEmptyGroupOptions.length" class="clone-group-empty-tip">
-                当前没有可作为克隆目标的空自定义分组，请先新建分组。
+                提示：当前没有可作为克隆目标的空自定义分组，请先新建分组。
               </p>
               <el-button
                 v-if="!cloneEmptyGroupOptions.length"
@@ -693,6 +694,11 @@
             </template>
           </el-table-column>
           <el-table-column prop="imageLabel" label="虚拟机镜像" min-width="140" show-overflow-tooltip />
+          <el-table-column label="所属分组" min-width="120" show-overflow-tooltip>
+            <template #default="{ row }">
+              {{ getVmGroupLabel(row.id) }}
+            </template>
+          </el-table-column>
           <el-table-column label="状态" width="88" align="center">
             <template #default="{ row }">
               <el-tag v-if="row.status === 'normal'" type="success" size="small">正常</el-tag>
@@ -813,9 +819,11 @@ const MORE_ACTIONS = [
   { command: 'opLog', label: '操作记录' }
 ]
 
+const AUTO_SHELF_STORAGE_KEY = 'CHSM_AUTO_SHELF_ENABLED'
+
 const query = reactive({ name: '', ip: '' })
 const applied = reactive({ ...query })
-const autoShelf = ref(false)
+const autoShelf = ref(readAutoShelfEnabled())
 const tableRef = ref()
 const selectedRows = ref([])
 const rows = ref(VIRTUAL_HSM_ROWS.map((r) => ({ ...r })))
@@ -831,6 +839,10 @@ watch(pageSize, () => {
   page.value = 1
 })
 
+watch(autoShelf, (enabled) => {
+  persistAutoShelfEnabled(enabled)
+}, { immediate: true })
+
 function handleSearch() {
   Object.assign(applied, query)
   page.value = 1
@@ -845,6 +857,22 @@ function handleReset() {
 
 function formatDash(val) {
   return val == null || val === '' ? '--' : val
+}
+
+function getVmGroupLabel(vmId) {
+  const gid = getVmGroupId(vmId)
+  if (!gid) return '--'
+  return findGroupById(gid)?.name ?? '--'
+}
+
+function readAutoShelfEnabled() {
+  if (typeof window === 'undefined') return false
+  return window.localStorage.getItem(AUTO_SHELF_STORAGE_KEY) === '1'
+}
+
+function persistAutoShelfEnabled(enabled) {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(AUTO_SHELF_STORAGE_KEY, enabled ? '1' : '0')
 }
 
 /** 迁移确认页规格展示：与稿一致压缩空白 */
@@ -1164,6 +1192,8 @@ const migrateTargetResourceOnShelf = computed(() => {
   return row.resourceOnShelf !== false
 })
 
+const migrateNeedSelectScope = computed(() => autoShelf.value && migrateTargetResourceOnShelf.value)
+
 const migrateTargetDisplayLabel = computed(() => {
   const r = selectedMigrateTargetVm.value
   if (!r) return ''
@@ -1231,11 +1261,12 @@ const migrateOrgSelectOptions = computed(() => {
   return listAuthorizedOrgSelectOptions(migrateGroupId.value)
 })
 
-const migrateGroupOrgDisabled = computed(
+const migrateOrgDisabled = computed(
   () =>
     !migrateTargetVmId.value ||
     !migrateTargetResourceOnShelf.value ||
-    !migrateGroupSelectOptions.value.length
+    !migrateGroupId.value ||
+    !migrateOrgSelectOptions.value.length
 )
 
 const migrateDoneSubtitle = computed(() => {
@@ -1399,24 +1430,20 @@ function onMigrateStep2Next() {
     return
   }
   const tgt = selectedMigrateTargetVm.value
-  if (tgt && tgt.resourceOnShelf === false) {
+  if (!migrateNeedSelectScope.value || (tgt && tgt.resourceOnShelf === false)) {
     migrateStep.value = 3
     return
   }
   const scopeGid = getVmGroupId(migrateTargetVmId.value)
-  if (!migrateGroupId.value || migrateGroupId.value !== scopeGid) {
+  if (migrateGroupId.value && migrateGroupId.value !== scopeGid) {
     ElMessage.warning('所选分组须与密码设备资源管理中该目标虚拟机 IP 所属分组一致')
     return
   }
-  if (!groupHasAtLeastOneControlVsm(migrateGroupId.value)) {
+  if (migrateGroupId.value && !groupHasAtLeastOneControlVsm(migrateGroupId.value)) {
     ElMessage.warning('该分组内无受控 VSM，无法提交')
     return
   }
-  if (!migrateOrgId.value) {
-    ElMessage.warning('请选择机构')
-    return
-  }
-  if (!isOrgAuthorizedAndManaged(scopeGid, migrateOrgId.value)) {
+  if (migrateOrgId.value && !isOrgAuthorizedAndManaged(scopeGid, migrateOrgId.value)) {
     ElMessage.warning('所选机构须为该分组已授权且在机构管理中为启用状态')
     return
   }
@@ -2209,6 +2236,13 @@ function onMoreCommand(cmd, row) {
   font-size: 12px;
   color: var(--neutral-8);
   line-height: 1.5;
+}
+
+.migrate-field-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--neutral-8);
 }
 
 .migrate-step--done :deep(.el-result) {

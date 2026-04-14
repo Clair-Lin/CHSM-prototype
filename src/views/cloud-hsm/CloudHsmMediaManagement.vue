@@ -93,36 +93,40 @@
       >
         <el-form label-width="96px" class="import-vm-form">
           <el-form-item label="虚拟机" required>
-            <el-select
-              v-model="importVmId"
-              placeholder="请选择虚拟机"
-              filterable
-              class="import-vm-select"
-            >
-              <el-option v-for="opt in vmSelectOptions" :key="opt.id" :label="opt.label" :value="opt.id" />
-            </el-select>
+            <div class="import-target-pick-row">
+              <el-input
+                readonly
+                :model-value="importVmDisplayLabel"
+                placeholder="请点击右侧选择目标虚拟机"
+                class="import-target-input"
+              />
+              <el-button class="import-target-suffix-btn" title="选择虚拟机" @click="openImportVmPicker">
+                <el-icon><MoreFilled /></el-icon>
+              </el-button>
+            </div>
           </el-form-item>
-          <el-form-item label="分组名称" :required="importVmResourceOnShelf">
+          <el-form-item label="分组名称">
             <el-select
               v-model="importGroupId"
               placeholder="请选择分组"
               filterable
-              :disabled="importGroupOrgDisabled"
+              disabled
               class="import-vm-select"
             >
               <el-option v-for="opt in groupSelectOptions" :key="opt.id" :label="opt.label" :value="opt.id" />
             </el-select>
           </el-form-item>
-          <el-form-item label="机构名称" :required="importVmResourceOnShelf">
+          <el-form-item label="机构名称">
             <el-select
               v-model="importOrgId"
               placeholder="请选择机构"
               filterable
-              :disabled="importGroupOrgDisabled || !importGroupId || !orgSelectOptions.length"
+              :disabled="importOrgDisabled"
               class="import-vm-select"
             >
               <el-option v-for="opt in orgSelectOptions" :key="opt.id" :label="opt.label" :value="opt.id" />
             </el-select>
+            <p class="import-field-hint">提示：勾选“虚拟机自动上架”后才需要选择分组和机构，未勾选为非必填。</p>
             <!--             <p v-if="importVmResourceOnShelf" class="import-field-hint">
               分组由密码设备资源管理中该虚拟机 IP 所属分组决定；机构须为该分组已授权且与「机构管理」中机构代号一致、状态为启用的机构（多机构时择一）。
             </p> -->
@@ -136,6 +140,115 @@
           <el-button type="primary" @click="onImportVmConfirm">确定</el-button>
         </template>
       </el-dialog>
+
+      <el-dialog
+        v-model="importVmPickerVisible"
+        title="选择虚拟机"
+        width="1080px"
+        append-to-body
+        align-center
+        destroy-on-close
+        class="import-vm-picker-dialog"
+        @closed="onImportVmPickerClosed"
+      >
+        <div class="import-picker-toolbar">
+          <el-form :inline="true" :model="importVmPickerQuery" class="import-picker-filter" label-width="auto" @submit.prevent>
+            <el-form-item label="虚拟密码机名称" class="import-picker-filter__item">
+              <el-input
+                v-model="importVmPickerQuery.name"
+                placeholder="请输入虚拟密码机名称"
+                clearable
+                class="import-picker-filter-input"
+              />
+            </el-form-item>
+            <el-form-item label="IP地址" class="import-picker-filter__item">
+              <el-input
+                v-model="importVmPickerQuery.ip"
+                placeholder="请输入IP地址"
+                clearable
+                class="import-picker-filter-input"
+              />
+            </el-form-item>
+            <el-form-item class="import-picker-filter__item import-picker-filter-actions">
+              <el-button type="primary" @click="handleImportVmPickerSearch">查询</el-button>
+              <el-button @click="handleImportVmPickerReset">重置</el-button>
+            </el-form-item>
+          </el-form>
+          <p class="import-picker-meta">已选 {{ importVmPickerSelectedCount }} 个虚拟机</p>
+        </div>
+        <div class="import-picker-table-host">
+          <el-table
+            :data="importVmPickerPagedRows"
+            class="vsm-table import-picker-table"
+            row-key="id"
+            stripe
+            table-layout="fixed"
+            max-height="420"
+            scrollbar-always-on
+            style="width: 100%"
+          >
+            <el-table-column fixed="left" width="52" align="center">
+              <template #default="{ row }">
+                <input
+                  type="radio"
+                  class="import-picker-native-radio"
+                  name="import-vm-picker-target"
+                  :checked="importVmPickerTempId === row.id"
+                  @click.stop
+                  @change="onImportVmPickerNativeRadioChange(row)"
+                />
+              </template>
+            </el-table-column>
+            <el-table-column fixed="left" label="序列号" width="200" class-name="col-wrap">
+              <template #default="{ row }">
+                <span class="cell-multiline">{{ row.serial }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="虚拟密码机名称" min-width="200" class-name="col-wrap">
+              <template #default="{ row }">
+                <span class="cell-multiline">{{ row.name }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="IP地址" min-width="160" class-name="col-ip">
+              <template #default="{ row }">
+                <div class="ip-cell">
+                  <div class="ip-line">IPV4: {{ row.ipv4 || '--' }}</div>
+                  <div class="ip-line ip-line--v6">IPV6: {{ formatDash(row.ipv6) }}</div>
+                </div>
+              </template>
+            </el-table-column>
+            <el-table-column prop="imageLabel" label="虚拟机镜像" min-width="140" show-overflow-tooltip />
+            <el-table-column label="所属分组" min-width="120" show-overflow-tooltip>
+              <template #default="{ row }">
+                {{ getVmGroupLabel(row.id) }}
+              </template>
+            </el-table-column>
+            <el-table-column label="状态" width="88" align="center">
+              <template #default="{ row }">
+                <el-tag v-if="row.status === 'normal'" type="success" size="small">正常</el-tag>
+                <el-tag v-else type="info" size="small">--</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="hostName" label="所属宿主机" min-width="100" show-overflow-tooltip />
+            <el-table-column prop="manufacturer" label="生产厂商" min-width="100" show-overflow-tooltip />
+            <el-table-column prop="version" label="版本" width="88" align="center" />
+          </el-table>
+        </div>
+        <div class="import-picker-pager-wrap">
+          <el-pagination
+            v-model:current-page="importVmPickerPage"
+            v-model:page-size="importVmPickerPageSize"
+            class="resource-pager import-picker-pager"
+            :total="importVmPickerFilteredRows.length"
+            :page-sizes="[10, 20, 30, 50]"
+            layout="total, prev, pager, next, sizes"
+          />
+        </div>
+        <template #footer>
+          <el-button @click="importVmPickerVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmImportVmPicker">确定</el-button>
+        </template>
+      </el-dialog>
     </template>
 
     <div v-else class="content-module placeholder-card">
@@ -147,6 +260,7 @@
 <script setup>
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { MoreFilled } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { VM_IMAGE_ROWS, VM_IMAGE_STATUS_META } from '../../mock/vmImageMock.js'
 import { VIRTUAL_HSM_ROWS } from '../../mock/virtualHsmMock.js'
@@ -166,6 +280,8 @@ const TAB_LABELS = {
   'host-upgrade': '宿主机升级管理'
 }
 
+const AUTO_SHELF_STORAGE_KEY = 'CHSM_AUTO_SHELF_ENABLED'
+
 const route = useRoute()
 const router = useRouter()
 
@@ -181,6 +297,13 @@ const importOrgId = ref('')
 const importGroupId = ref('')
 const importVmId = ref('')
 const importImageRow = ref(null)
+const importVmPickerVisible = ref(false)
+const importVmPickerTempId = ref('')
+const importVmPickerPage = ref(1)
+const importVmPickerPageSize = ref(10)
+const importVmPickerQuery = reactive({ name: '', ip: '' })
+const importVmPickerApplied = reactive({ ...importVmPickerQuery })
+const autoShelfEnabled = ref(readAutoShelfEnabled())
 
 const selectedImportVm = computed(() => VIRTUAL_HSM_ROWS.find((r) => r.id === importVmId.value) ?? null)
 
@@ -191,6 +314,8 @@ const importVmResourceOnShelf = computed(() => {
   return row.resourceOnShelf !== false
 })
 
+const importNeedSelectScope = computed(() => autoShelfEnabled.value && importVmResourceOnShelf.value)
+
 /** 仅展示在密码设备资源中已登记、且所属资源分组满足受控 VSM 条件的虚拟机 */
 const vmSelectOptions = computed(() =>
   VIRTUAL_HSM_ROWS.filter((r) => isVmImportEligible(r.id)).map((r) => ({
@@ -198,6 +323,38 @@ const vmSelectOptions = computed(() =>
     label: `${r.name} (IP: ${r.ipv4 || '—'})${r.resourceOnShelf === false ? '（未上架）' : ''}`
   }))
 )
+
+const importVmDisplayLabel = computed(() => {
+  if (!importVmId.value) return ''
+  return vmSelectOptions.value.find((o) => o.id === importVmId.value)?.label ?? ''
+})
+
+const importVmPickerAllRows = computed(() => VIRTUAL_HSM_ROWS.filter((r) => isVmImportEligible(r.id)))
+
+const importVmPickerFilteredRows = computed(() => {
+  return importVmPickerAllRows.value.filter((row) => {
+    if (importVmPickerApplied.name && !row.name.includes(importVmPickerApplied.name)) return false
+    if (importVmPickerApplied.ip) {
+      const hit =
+        (row.ipv4 && row.ipv4.includes(importVmPickerApplied.ip)) ||
+        (row.ipv6 && row.ipv6.includes(importVmPickerApplied.ip))
+      if (!hit) return false
+    }
+    return true
+  })
+})
+
+const importVmPickerPagedRows = computed(() => {
+  const start = (importVmPickerPage.value - 1) * importVmPickerPageSize.value
+  return importVmPickerFilteredRows.value.slice(start, start + importVmPickerPageSize.value)
+})
+
+const importVmPickerSelectedCount = computed(() => (importVmPickerTempId.value ? 1 : 0))
+
+function readAutoShelfEnabled() {
+  if (typeof window === 'undefined') return false
+  return window.localStorage.getItem(AUTO_SHELF_STORAGE_KEY) === '1'
+}
 
 /**
  * 分组：与密码设备资源管理中该虚拟机 IP 对应设备所在分组一致（findGroupById）；
@@ -222,8 +379,8 @@ const orgSelectOptions = computed(() => {
 })
 
 /** 未选虚拟机或未上架时，分组、机构均不可操作 */
-const importGroupOrgDisabled = computed(
-  () => !importVmId.value || !importVmResourceOnShelf.value || !groupSelectOptions.value.length
+const importOrgDisabled = computed(
+  () => !importVmId.value || !importVmResourceOnShelf.value || !importGroupId.value || !orgSelectOptions.value.length
 )
 
 function syncGroupFromVm() {
@@ -254,6 +411,52 @@ function resetImportDialogSelection() {
   syncOrgFromGroup()
 }
 
+function handleImportVmPickerSearch() {
+  Object.assign(importVmPickerApplied, importVmPickerQuery)
+  importVmPickerPage.value = 1
+}
+
+function handleImportVmPickerReset() {
+  importVmPickerQuery.name = ''
+  importVmPickerQuery.ip = ''
+  Object.assign(importVmPickerApplied, importVmPickerQuery)
+  importVmPickerPage.value = 1
+}
+
+function openImportVmPicker() {
+  importVmPickerQuery.name = ''
+  importVmPickerQuery.ip = ''
+  Object.assign(importVmPickerApplied, importVmPickerQuery)
+  importVmPickerPage.value = 1
+  importVmPickerTempId.value = importVmId.value
+  importVmPickerVisible.value = true
+}
+
+function onImportVmPickerNativeRadioChange(row) {
+  importVmPickerTempId.value = row?.id ?? ''
+}
+
+function confirmImportVmPicker() {
+  if (!importVmPickerTempId.value) {
+    ElMessage.warning('请选择虚拟机')
+    return
+  }
+  if (!isVmImportEligible(importVmPickerTempId.value)) {
+    ElMessage.warning('所选虚拟机所属分组不满足「至少 1 台受控 VSM」条件')
+    return
+  }
+  importVmId.value = importVmPickerTempId.value
+  importVmPickerVisible.value = false
+}
+
+function onImportVmPickerClosed() {
+  importVmPickerQuery.name = ''
+  importVmPickerQuery.ip = ''
+  Object.assign(importVmPickerApplied, importVmPickerQuery)
+  importVmPickerTempId.value = ''
+  importVmPickerPage.value = 1
+}
+
 watch(importVmId, (id) => {
   if (!id) {
     importGroupId.value = ''
@@ -268,10 +471,29 @@ watch(importGroupId, () => {
   syncOrgFromGroup()
 })
 
+watch(importVmPickerPageSize, () => {
+  importVmPickerPage.value = 1
+})
+
+watch(importVmPickerFilteredRows, (list) => {
+  const maxPage = Math.max(1, Math.ceil(list.length / importVmPickerPageSize.value) || 1)
+  if (importVmPickerPage.value > maxPage) importVmPickerPage.value = maxPage
+})
+
 const currentCrumbLeaf = computed(() => TAB_LABELS[activeTab.value] || '影像管理')
 
 function statusMeta(key) {
   return VM_IMAGE_STATUS_META[key] || { label: '--', dotClass: 'status-dot--muted' }
+}
+
+function formatDash(value) {
+  return value == null || value === '' ? '--' : value
+}
+
+function getVmGroupLabel(vmId) {
+  const gid = getVmGroupId(vmId)
+  if (!gid) return '--'
+  return findGroupById(gid)?.name ?? '--'
 }
 
 function syncTabFromRoute() {
@@ -348,6 +570,7 @@ function onUpload() {
 }
 
 function onImport(row) {
+  autoShelfEnabled.value = readAutoShelfEnabled()
   importImageRow.value = row
   ElMessageBox.confirm(
     '导入影像前请确认原虚拟机密钥信息为空，不为空可能导入不成功！',
@@ -370,6 +593,8 @@ function onImport(row) {
 }
 
 function onImportVmDialogClosed() {
+  onImportVmPickerClosed()
+  importVmPickerVisible.value = false
   importOrgId.value = ''
   importGroupId.value = ''
   importVmId.value = ''
@@ -388,26 +613,22 @@ function onImportVmConfirm() {
   const img = importImageRow.value?.imageName ?? ''
   const vm = vmSelectOptions.value.find((o) => o.id === importVmId.value)
 
-  if (selectedImportVm.value && selectedImportVm.value.resourceOnShelf === false) {
+  if (!importNeedSelectScope.value || (selectedImportVm.value && selectedImportVm.value.resourceOnShelf === false)) {
     importVmVisible.value = false
     ElMessage.success(`已提交导入：${img} → ${vm?.label ?? ''}（系统未上架，未选分组/机构）（原型）`)
     return
   }
 
   const scopeGid = getVmGroupId(importVmId.value)
-  if (!importGroupId.value || importGroupId.value !== scopeGid) {
+  if (importGroupId.value && importGroupId.value !== scopeGid) {
     ElMessage.warning('所选分组须与密码设备资源管理中该虚拟机 IP 所属分组一致')
     return
   }
-  if (!groupHasAtLeastOneControlVsm(importGroupId.value)) {
+  if (importGroupId.value && !groupHasAtLeastOneControlVsm(importGroupId.value)) {
     ElMessage.warning('该分组内无受控 VSM，无法提交')
     return
   }
-  if (!importOrgId.value) {
-    ElMessage.warning('请选择机构')
-    return
-  }
-  if (!isOrgAuthorizedAndManaged(scopeGid, importOrgId.value)) {
+  if (importOrgId.value && !isOrgAuthorizedAndManaged(scopeGid, importOrgId.value)) {
     ElMessage.warning('所选机构须为该分组已授权且在机构管理中为启用状态')
     return
   }
@@ -775,6 +996,133 @@ function onDelete(row) {
   min-width: 0;
 }
 
+.import-target-pick-row {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.import-target-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.import-target-input :deep(.el-input__wrapper) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.import-target-suffix-btn {
+  padding: 0 12px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -1px;
+  font-size: 12px;
+}
+
+.import-picker-toolbar {
+  margin-bottom: 10px;
+}
+
+.import-picker-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 16px;
+  row-gap: 8px;
+  margin-bottom: 0;
+}
+
+.import-picker-filter :deep(.el-form-item) {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  margin-bottom: 0;
+  margin-right: 0;
+}
+
+.import-picker-filter :deep(.el-form-item__label) {
+  float: none;
+  height: 32px;
+  line-height: 32px;
+  padding: 0 8px 0 0;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.import-picker-filter :deep(.el-form-item__content) {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  margin-left: 0 !important;
+  line-height: 32px;
+  font-size: 12px;
+}
+
+.import-picker-filter-actions :deep(.el-form-item__content) {
+  gap: 8px;
+  font-size: 12px;
+}
+
+.import-picker-filter-input {
+  width: 200px;
+  font-size: 12px;
+}
+
+.import-picker-meta {
+  margin: 18px 0;
+  font-size: 12px;
+  color: var(--neutral-10);
+}
+
+.import-picker-table-host {
+  width: 100%;
+}
+
+.import-picker-native-radio {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  vertical-align: middle;
+  cursor: pointer;
+  accent-color: var(--el-color-primary);
+}
+
+.import-picker-table {
+  font-size: 12px;
+  width: 100%;
+}
+
+.import-picker-table :deep(.el-table__border-left-patch),
+.import-picker-table :deep(.el-table__border-right-patch) {
+  display: block !important;
+}
+
+.import-picker-table :deep(.el-table__inner-wrapper) {
+  min-width: 0;
+}
+
+.import-picker-table :deep(.el-scrollbar__bar.is-horizontal) {
+  height: 8px;
+  left: 2px;
+  right: 2px;
+}
+
+.import-picker-table :deep(.el-scrollbar__bar.is-horizontal .el-scrollbar__thumb) {
+  border-radius: 4px;
+}
+
+.import-picker-pager-wrap {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 2px 0;
+}
+
+.import-picker-pager {
+  margin-right: 0;
+}
+
 .import-field-hint {
   margin: 6px 0 0;
   font-size: 12px;
@@ -835,6 +1183,41 @@ function onDelete(row) {
 
 .import-vm-dialog .el-dialog__footer {
   padding: 8px 16px 16px;
+}
+
+.import-vm-picker-dialog.el-dialog {
+  padding: 0;
+  overflow: hidden;
+}
+
+.import-vm-picker-dialog .el-dialog__header {
+  margin: 0;
+  padding: 10px 48px 10px 14px;
+  background: var(--neutral-2);
+  border-bottom: 1px solid var(--neutral-4);
+  box-sizing: border-box;
+}
+
+.import-vm-picker-dialog .el-dialog__headerbtn {
+  top: 6px;
+  right: 8px;
+  width: 40px;
+  height: 40px;
+}
+
+.import-vm-picker-dialog .el-dialog__title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--neutral-10);
+}
+
+.import-vm-picker-dialog .el-dialog__body {
+  padding: 10px 14px 8px;
+}
+
+.import-vm-picker-dialog .el-dialog__footer {
+  padding: 8px 14px 12px;
+  border-top: 1px solid var(--neutral-4);
 }
 
 .import-vm-dialog .import-vm-form .el-form-item__label,
