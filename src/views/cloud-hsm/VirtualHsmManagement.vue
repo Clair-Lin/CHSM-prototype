@@ -522,7 +522,7 @@
           <el-form-item v-if="cloneIpMode === 'custom'" label="IP地址" required>
             <el-input v-model="cloneCustomIp" placeholder="请输入IP地址" clearable class="migrate-pick-select" />
           </el-form-item>
-          <el-form-item label="选择分组" required>
+          <el-form-item label="选择分组">
             <div class="clone-group-field">
               <el-select
                 v-model="cloneTargetGroupId"
@@ -552,7 +552,7 @@
               </el-button>
             </div>
           </el-form-item>
-          <el-form-item v-if="cloneTargetGroupId" label="机构" required>
+          <el-form-item v-if="cloneTargetGroupId" label="机构">
             <div v-if="cloneEnabledAuthOrgOptions.length" class="clone-org-field">
               <el-select
                 v-model="cloneAuthOrgCode"
@@ -1107,18 +1107,16 @@ function onCloneStep3Next() {
       return
     }
   }
-  if (!cloneTargetGroupId.value) {
-    ElMessage.warning('请选择分组')
-    return
-  }
-  if (!groupHasEnabledAuthorizedOrg(cloneTargetGroupId.value)) {
-    ElMessage.warning('该分组尚未授权机构，请先点击「授权机构」完成授权')
-    return
-  }
-  const orgOpts = listEnabledAuthorizedOrgsForGroup(cloneTargetGroupId.value)
-  if (!cloneAuthOrgCode.value || !orgOpts.some((o) => o.orgCode === cloneAuthOrgCode.value)) {
-    ElMessage.warning('请选择机构')
-    return
+  if (cloneTargetGroupId.value) {
+    if (!groupHasEnabledAuthorizedOrg(cloneTargetGroupId.value)) {
+      ElMessage.warning('所选分组尚未授权机构，请先点击「授权机构」完成授权或清空分组后继续')
+      return
+    }
+    const orgOpts = listEnabledAuthorizedOrgsForGroup(cloneTargetGroupId.value)
+    if (cloneAuthOrgCode.value && !orgOpts.some((o) => o.orgCode === cloneAuthOrgCode.value)) {
+      ElMessage.warning('所选机构不在该分组可用机构列表中')
+      return
+    }
   }
   cloneStep.value = 4
 }

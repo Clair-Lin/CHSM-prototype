@@ -86,3 +86,4 @@
 - `CloudHsmMediaManagement.vue`：导入虚拟机影像弹窗中「虚拟机」改为与迁移流程一致的选择样式（只读输入框 + `...` 选择按钮 +「选择虚拟机」弹窗），并复用同风格筛选栏、单选表格与分页；虚拟机候选内容与既有导入逻辑保持一致（仍基于 `isVmImportEligible`）。
 - `VirtualHsmManagement.vue` / `CloudHsmMediaManagement.vue`：迁移与导入弹窗增加提示文案「勾选虚拟机自动上架后才需选择分组/机构，未勾选为非必填」；分组、机构字段均改为非必填（仅在启用自动上架时执行必需校验）；两处“选择虚拟机”弹窗表格新增「所属分组」列（按 `getVmGroupId + findGroupById` 展示）；并将“虚拟机自动上架”勾选状态通过 `localStorage(CHSM_AUTO_SHELF_ENABLED)` 在页面间共享。
 - `VirtualHsmManagement.vue` / `CloudHsmMediaManagement.vue`：按交互调整为「分组由虚拟机自动带出且置灰不可选，机构保持可选」；分别将分组下拉改为禁用态，机构下拉改为独立禁用条件（仅在无可选机构或未选虚拟机/未上架时禁用）。
+- `VirtualHsmManagement.vue`：克隆模块第 3 步将「选择分组」「机构」改为非必填（去掉必填标识与强制校验）；提交时仅在已选择分组/机构的情况下做合法性校验，允许不选分组机构直接继续下一步。
