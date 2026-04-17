@@ -87,3 +87,40 @@
 - `VirtualHsmManagement.vue` / `CloudHsmMediaManagement.vue`：迁移与导入弹窗增加提示文案「勾选虚拟机自动上架后才需选择分组/机构，未勾选为非必填」；分组、机构字段均改为非必填（仅在启用自动上架时执行必需校验）；两处“选择虚拟机”弹窗表格新增「所属分组」列（按 `getVmGroupId + findGroupById` 展示）；并将“虚拟机自动上架”勾选状态通过 `localStorage(CHSM_AUTO_SHELF_ENABLED)` 在页面间共享。
 - `VirtualHsmManagement.vue` / `CloudHsmMediaManagement.vue`：按交互调整为「分组由虚拟机自动带出且置灰不可选，机构保持可选」；分别将分组下拉改为禁用态，机构下拉改为独立禁用条件（仅在无可选机构或未选虚拟机/未上架时禁用）。
 - `VirtualHsmManagement.vue`：克隆模块第 3 步将「选择分组」「机构」改为非必填（去掉必填标识与强制校验）；提交时仅在已选择分组/机构的情况下做合法性校验，允许不选分组机构直接继续下一步。
+
+## 2026-04-15
+
+- 密钥列表：`src/mock/keyListMock.js` 提供三页签原型数据（系统管理主密钥、机构-密码机密钥、机构-库内密钥）及筛选项常量。
+- `src/views/keys/keyListUtils.js`、`keyListCommon.css`：状态点、密钥名称/类型双行展示、筛选条与表格/分页/「密钥操作」下拉等共用样式与工具函数。
+- `KeysList.vue`：面包屑「密钥信息 / 密钥列表 / 当前页」、标题与 `el-tabs` 三页签；`?tab=sys|hsm|lib` 与路由同步。
+- `KeysListSysMasterKey.vue`：创建系统管理主密钥、表格列与稿一致；「密钥操作」含删除、检测、导出密钥、导入密钥（原型提示/删除确认）。
+- `KeysListInstitutionHsmKey.vue`：两行筛选（密钥 ID/名称/类型/用途/来源/状态、设备分组、添加时间、机构+选择占位）、密码机密钥登记；副本状态与来源列带说明图标；「密钥操作」含启用副本、导出密钥、导入密钥。
+- `KeysListInstitutionLibraryKey.vue`：单行筛选（密钥名称/ID、状态、类型、用途、添加时间）、表格与分页；「密钥操作」含导出密钥、导入密钥。
+- `src/router/index.js`：`/keys/list` 由占位改为挂载 `KeysList`；`npm run build` 通过。
+- `ExportKeyFlowDialog.vue`：导出流程先「选择UKEY」检测，约 1.2s 后进入「密钥备份」；去掉「选择密钥备份范围」，`el-steps` 仅两步（插入密钥保护 KEY / 下载备份文件），三支全部 PIN 验证通过后当前步切至第二步；三 UKEY 卡片按序高亮：每支需先「刷新 UKEY」模拟检测到插入（`insertDetected`）后才可点「选择密钥」打开嵌套「输入PIN码」（容器选项随当前支变化）；PIN 通过后标记该支完成、切下一支并清空检测态等待再次插入与刷新；三支均完成后主按钮由「选择密钥」变为「下一步」（占位进入下载流程）；不再在进入备份时自动弹 PIN。
+- `ExportKeyFlowDialog.vue`：三支 PIN 完成后点「下一步」进入 `backupSubPhase=download`；下载页为绿色圆形上传图标、说明文案「密钥备份文件已生成，请点击下方按钮下载」、主按钮「下载备份文件」（原型提示）；底部仅「取消」「上一步」（白底描边），上一步返回 UKEY 流程；步骤条 `active=1` 与弹窗宽度 640px 随子阶段切换。
+- `KeysListSysMasterKey.vue`：工具栏在「创建系统管理主密钥」右侧增加「制作密钥导出key」主色描边按钮；点击打开 `MakeExportKeyDialog`；工具栏 `flex` 间距对齐。
+- `MakeExportKeyDialog.vue`：制作密钥导出 key 弹窗（标题与主文案、双行清单：启动安全控件已勾选+下载链、插入 UKEY 为加载态/全部验证后变勾）；底部取消、刷新 UKEY、主色「开始制作」（5 支 UKEY 均 PIN 验证通过前禁用）；逻辑与导出密钥 UKEY 阶段一致：刷新检测→自动弹 PIN→依次 5 支；开始制作占位成功并关闭。
+- `MakeExportKeyDialog.vue`：`open(row)` 写入「当前密钥」；首屏为清单，`刷新 UKEY` 首次识别后切换为两步步骤条 + 5 张 UKEY 卡片（与导出备份 UKEY 界面同构），宽 760px；槽位区底栏增加主色「上一步」占位；`KeysListSysMasterKey` 打开时传入当前页首行密钥。
+- `ExportKeyFlowDialog.vue`：UKEY 阶段去掉「选择密钥」按钮；`刷新 UKEY` 识别成功后自动 `openPinDialog`；已识别状态下再次刷新可重新打开 PIN（PIN 弹窗打开中时提示先关闭）；三支全部验证后仅显示「下一步」；说明与卡片副文案同步为自动弹 PIN 逻辑。
+- `ExportKeyFlowDialog.vue`：新增 `backupSubPhase=precheck`（控件加载后进备份、未插第一把前）：两步步骤条；主文案「请准备 3 个…」；清单「启动安全控件」绿勾+下载安全控件链、「插入 UKEY」红底叉+刷新链；底栏取消/刷新 UKEY/主色上一步/禁用「选择密钥」；首次「刷新 UKEY」或清单内「刷新」链进入 `ukeys` 并检测首支后自动弹 PIN。
+- `KeysList.vue`：`provide('openExportKeyFlow')` 并挂载上述弹窗；三个子列表在「导出密钥」命令中 `inject` 调用以打开流程。
+- `exportKeyFlowPreference.js`：`localStorage CHSM_MAKE_EXPORT_KEY_DONE` 记录是否至少完成过一次「开始制作」；`hasMadeExportKeyOnce` / `markMakeExportKeyCompletedOnce`。
+- `KeysList.vue`：`openExportKeyFlow` 改为编排——未制作过时先 `MakeExportKeyDialog`（`chainAfter`）再导出；已制作过则 `ElMessageBox` 二段确认（先选是否制作，选制作则提示无法再恢复历史导出密钥）或「直接进入导出」打开 `ExportKeyFlowDialog`；`provide('openMakeExportKeyDialog')`；挂载 `MakeExportKeyDialog` 监听 `make-completed` 串联打开导出弹窗。
+- `MakeExportKeyDialog.vue`：`open(row,{chainAfter})`；`开始制作` 时写入 localStorage 并在 `chainAfter` 时 `emit('make-completed', row)` 再关闭。
+- `KeysListSysMasterKey.vue`：`制作密钥导出key` 改为 `inject('openMakeExportKeyDialog')`；移除本页内嵌 `MakeExportKeyDialog`。
+- `MakeExportKeyDialog.vue`：新增非首次导出的第一步选择模式 `mode='choose'`（同一界面内选择「不制作直接导出 / 制作新的导出 key」），选择制作时在界面内提示「若制作，则无法再恢复历史导出密钥」后切回制作流程；选择不制作则 `emit('skip-to-export')` 直接进入导出流程。
+- `KeysList.vue`：去掉 `ElMessageBox` 串行弹窗，统一改为打开 `MakeExportKeyDialog` 作为第一步界面——首次 `mode='make'`（完成后串联导出），非首次 `mode='choose'`（界面内选择是否制作）；新增监听 `skip-to-export`。
+- `MakeExportKeyDialog.vue`：`mode='choose'` 下“是否制作密钥”单选改为左右并排布局（可换行）。
+- `ExportKeyFlowDialog.vue`：步骤条由 2 步调整为 3 步，首步增加「导出密钥制作步骤」，其后为「插入密钥保护KEY」「下载密钥备份文件」；当前流程进入该弹窗时首步视为已完成，插入阶段 `active=1`，下载阶段 `active=2`。
+- `ExportKeyFlowDialog.vue`：将“是否制作导出 key / 首次制作提示”并入密钥备份弹窗第 1 步（`backupSubPhase=setup`，非首次单选左右排列）；第 1 步点「下一步」后先出现「选择UKEY-控件检测中」过渡，再自动进入第 2 步「插入密钥保护KEY」界面。
+- `KeysList.vue`：`openExportKeyFlow` 不再先弹 `MakeExportKeyDialog`，改为直接打开 `ExportKeyFlowDialog` 并传入 `hasMadeBefore`；`MakeExportKeyDialog` 保留给工具栏「制作密钥导出key」独立入口。
+- `ExportKeyFlowDialog.vue`：流程改为三步连贯可前后切换——移除中间「选择UKEY-控件检测中」独立过渡弹层；第 1 步「下一步」直接进入第 2 步；第 2 步支持「上一步」返回第 1 步；第 1 步非首次若选“制作新的导出密钥 key”，点击下一步将跳转 `MakeExportKeyDialog`，制作完成后回到导出第 2 步（`resumeStep2`）。
+- `KeysList.vue`：挂载 `MakeExportKeyDialog` 的 `make-completed` 事件用于回跳导出第 2 步；`provide('openMakeExportKeyDialog')` 支持透传选项（含 `chainAfter`）。
+- `ExportKeyFlowDialog.vue`：第 2 步预检两项状态改为“先加载后出结果”——`precheckControlState`、`precheckInsertState` 初始均为 loading（旋转 `Loading` 图标）；约 850ms 后第一项切成功勾（绿）、第二项切失败叉（红）；进入第 2 步或 `resumeStep2` 时触发同样状态机，关闭弹窗清理定时器。
+- `ExportKeyFlowDialog.vue`：第 1 步界面改为图示样式——主说明「保护密钥存储于 UKEY…」、补充描述、两段式选项按钮（使用现有保护密钥 / 重新导出保护密钥到 UKEY）与底部黄色注意文案；首次导出禁用“使用现有保护密钥”；第 1 步底栏改为「取消导出 / 刷新UKEY / 下一步」。
+- `ExportKeyFlowDialog.vue`：第 1 步「下一步」分支收敛：选择「使用现有保护密钥」则直接进入第 2 步；选择「重新导出保护密钥」则直接跳转 `MakeExportKeyDialog` 进行制作（制作完成后回到导出第 2 步）；移除该文件中已不用的 `markMakeExportKeyCompletedOnce` 导入。
+- 新增 `ImportRecoverDialog.vue`：密钥导入/恢复三步弹窗——第 1 步上传备份文件（仅 `.enc`）；第 2 步 UKEY 验证复用导出三把 UKEY 逻辑（预检两项先 loading 后勾/叉、刷新识别自动弹 PIN、三支依次验证）；第 3 步完成态（图示风格「准备就绪」+「开始恢复」按钮）并提供上一步返回。
+- `KeysList.vue`：挂载并 `provide('openImportRecoverFlow')`。
+- `KeysListSysMasterKey.vue` / `KeysListInstitutionHsmKey.vue` / `KeysListInstitutionLibraryKey.vue`：`导入密钥` 操作改为打开 `ImportRecoverDialog`，不再仅弹占位提示。
+- `ImportRecoverDialog.vue`：第 2 步先仅预检清单；识别到当前支 UKEY 后「插入 UKEY」变绿勾，其下仅展示三张 UKEY 卡片（无上文说明）、卡片区 `margin-top` 与清单分隔，并自动弹 PIN；其余不变。

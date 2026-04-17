@@ -9,6 +9,7 @@ import VirtualHsmManagement from '../views/cloud-hsm/VirtualHsmManagement.vue'
 import CloudHsmMediaManagement from '../views/cloud-hsm/CloudHsmMediaManagement.vue'
 import IpPoolManagement from '../views/cloud-hsm/IpPoolManagement.vue'
 import OrganizationManagement from '../views/organization/OrganizationManagement.vue'
+import KeysList from '../views/keys/KeysList.vue'
 
 function placeholder(title, section = null) {
   return {
@@ -119,7 +120,8 @@ const routes = [
       {
         path: '/keys/list',
         name: 'KeysList',
-        ...placeholder('密钥列表', '密钥信息')
+        component: KeysList,
+        meta: { title: '密钥列表', section: '密钥信息' }
       },
       {
         path: '/logs/operation',

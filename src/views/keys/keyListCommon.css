@@ -1,0 +1,298 @@
+.keys-list-page .crumb-segment {
+  color: var(--neutral-9);
+}
+
+.keys-list-page .crumb-sep {
+  margin: 0 2px;
+  color: var(--neutral-7);
+  font-size: 12px;
+}
+
+.keys-list-page .slash {
+  font-style: normal;
+}
+
+.keys-list-page .tabs-card {
+  padding: 0 12px;
+  margin-bottom: 12px;
+}
+
+.keys-list-page .key-list-tabs :deep(.el-tabs__header) {
+  margin: 0;
+}
+
+.keys-list-page .key-list-tabs :deep(.el-tabs__item) {
+  font-size: 14px;
+  padding: 0 20px;
+  height: 44px;
+  line-height: 44px;
+}
+
+.keys-list-page .filter-strip {
+  margin-bottom: 10px;
+  padding: 10px 15px;
+  background: var(--neutral-0);
+  box-shadow: var(--shadow-1);
+}
+
+.keys-list-page .filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  column-gap: 8px;
+  row-gap: 6px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.keys-list-page .filter-form :deep(.el-form-item) {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  margin: 0;
+}
+
+.keys-list-page .filter-form :deep(.el-form-item__label) {
+  height: 32px;
+  line-height: 32px;
+  padding: 0 4px 0 0;
+  font-size: 12px;
+}
+
+.keys-list-page .filter-form__actions {
+  margin-left: auto;
+}
+
+.keys-list-page .filter-input {
+  width: 168px;
+}
+
+.keys-list-page .filter-input--wide {
+  width: 200px;
+}
+
+.keys-list-page .filter-input--org {
+  width: 200px;
+}
+
+.keys-list-page .filter-select {
+  width: 140px;
+}
+
+.keys-list-page .btn-reset-outline {
+  border-color: var(--el-color-primary);
+  color: var(--el-color-primary);
+  background: var(--neutral-0);
+}
+
+.keys-list-page .btn-reset-outline:hover {
+  border-color: var(--el-color-primary-light-3);
+  color: var(--el-color-primary-light-3);
+  background: var(--el-color-primary-light-9);
+}
+
+.keys-list-page .table-card {
+  padding: 0;
+  background: var(--neutral-0);
+  box-shadow: var(--shadow-1);
+}
+
+.keys-list-page .table-card__toolbar {
+  padding: 15px;
+}
+
+.keys-list-page .table-card__toolbar :deep(.el-button) {
+  padding: 2px 16px;
+  font-size: 12px;
+}
+
+.keys-list-page .table-card__sheet {
+  width: 100%;
+}
+
+.keys-list-page .pager-wrap {
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 12px 12px 0;
+  background: transparent;
+}
+
+.keys-list-page .resource-pager {
+  flex-wrap: wrap;
+  row-gap: 8px;
+  justify-content: flex-end;
+}
+
+.keys-list-page .resource-pager :deep(.el-pagination__total) {
+  margin-right: 12px;
+  color: var(--neutral-10);
+}
+
+.keys-list-page .resource-pager :deep(.btn-prev),
+.keys-list-page .resource-pager :deep(.btn-next),
+.keys-list-page .resource-pager :deep(.el-pager li) {
+  border-radius: 4px !important;
+}
+
+.keys-list-page .resource-pager :deep(.el-pagination__sizes .el-select .el-input__wrapper),
+.keys-list-page .resource-pager :deep(.el-pagination__sizes .el-select__wrapper) {
+  border-color: var(--brand-6) !important;
+  border-radius: 4px !important;
+}
+
+.keys-list-page .status-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.keys-list-page .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.keys-list-page .status-dot--success {
+  background: var(--el-color-success);
+}
+
+.keys-list-page .status-dot--warning {
+  background: var(--warning-6);
+}
+
+.keys-list-page .cell-key-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.35;
+}
+
+.keys-list-page .cell-key-name__title {
+  font-size: 12px;
+  color: var(--neutral-10);
+}
+
+.keys-list-page .cell-key-name__id {
+  font-size: 12px;
+  color: var(--neutral-8);
+}
+
+.keys-list-page .cell-type-purpose {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.35;
+}
+
+.keys-list-page .cell-type-purpose__main {
+  font-size: 12px;
+  color: var(--neutral-10);
+}
+
+.keys-list-page .cell-type-purpose__sub {
+  font-size: 12px;
+  color: var(--neutral-8);
+}
+
+.keys-list-page .hint-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.keys-list-page .hint-with-icon .el-icon {
+  color: var(--neutral-7);
+  cursor: default;
+}
+
+.keys-list-page .ops-row {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.keys-list-page .ops-link {
+  padding: 0;
+  font-size: 12px;
+  height: auto;
+  min-height: 0;
+}
+
+.keys-list-page .ops-more-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--brand-6);
+  cursor: pointer;
+  user-select: none;
+}
+
+.keys-list-page .ops-more-trigger:hover {
+  color: var(--brand-5);
+}
+
+.keys-list-page .ops-more-icon {
+  font-size: 12px;
+}
+
+.keys-list-page .key-table {
+  font-size: 12px;
+  color: var(--neutral-10);
+  --el-table-border-color: transparent;
+  --el-table-border: none;
+}
+
+.keys-list-page .key-table :deep(.el-table__inner-wrapper::before) {
+  display: none;
+}
+
+.keys-list-page .key-table :deep(.el-table__border-left-patch),
+.keys-list-page .key-table :deep(.el-table__border-right-patch) {
+  display: none;
+}
+
+.keys-list-page .key-table :deep(thead .el-table__cell) {
+  background-color: #f5f5f5 !important;
+  color: var(--neutral-10) !important;
+  border-bottom: 1px solid var(--neutral-4) !important;
+}
+
+.keys-list-page .key-table :deep(tbody .el-table__cell) {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid var(--neutral-4) !important;
+}
+
+.keys-list-page .key-table :deep(tbody tr:hover > td.el-table__cell) {
+  background-color: #ffffff !important;
+}
+
+.keys-list-page .key-table :deep(.el-table__fixed-right::before) {
+  background-color: transparent;
+}
+
+.keys-list-page .key-table :deep(.el-table__fixed-right) {
+  box-shadow: -8px 0 12px -8px rgba(0, 0, 0, 0.06);
+}
+
+.keys-list-page .org-pick-suffix {
+  padding: 0 10px;
+}
+
+.key-more-dropdown .el-dropdown-menu__item {
+  justify-content: center;
+  min-width: 112px;
+  color: var(--brand-6);
+  font-size: 12px;
+}
+
+.key-more-dropdown .el-dropdown-menu__item:not(.is-disabled):focus {
+  color: var(--brand-6);
+  background: var(--brand-1);
+}
