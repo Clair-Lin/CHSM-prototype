@@ -124,3 +124,47 @@
 - `KeysList.vue`：挂载并 `provide('openImportRecoverFlow')`。
 - `KeysListSysMasterKey.vue` / `KeysListInstitutionHsmKey.vue` / `KeysListInstitutionLibraryKey.vue`：`导入密钥` 操作改为打开 `ImportRecoverDialog`，不再仅弹占位提示。
 - `ImportRecoverDialog.vue`：第 2 步先仅预检清单；识别到当前支 UKEY 后「插入 UKEY」变绿勾，其下仅展示三张 UKEY 卡片（无上文说明）、卡片区 `margin-top` 与清单分隔，并自动弹 PIN；其余不变。
+
+## 2026-04-24
+
+- 新增机构端页面目录 `src/views/institution/`，并创建 `InstitutionLayout.vue`：独立顶部与侧栏布局（不含“控制台”入口），顶部提供“管理中心”按钮，点击后跳转管理端首页 `/welcome`；同时保留全屏与用户下拉占位能力。
+- 新增机构端业务页 `InstitutionHsmKeys.vue`、`InstitutionLibraryKeys.vue`：分别承载「密码机密钥」「库内密钥」页面，复用现有密钥列表模块（`KeysListInstitutionHsmKey.vue`、`KeysListInstitutionLibraryKey.vue`）与样式（`keyListCommon.css`），并提供对应面包屑与标题。
+- 更新 `src/router/index.js`：接入机构端独立路由树 `/institution`，默认重定向至 `/institution/keys/hsm`，新增子路由 `/institution/keys/hsm` 与 `/institution/keys/library`，分别映射两个机构端页面。
+- 更新 `src/components/Layout.vue`：管理端顶部用户下拉中的“退出登录（占位）”点击后由占位函数改为 `router.push('/institution')`，实现从管理端直接跳转到机构端首页。
+- 更新 `src/views/institution/InstitutionLayout.vue`：左侧菜单改为父子级结构（父菜单：密钥管理、密码应用、日志管理；子菜单：密码机密钥、库内密钥、机构应用、默认应用、密码服务日志），支持展开/收起与当前子菜单高亮，整体样式对齐机构端截图结构。
+- 新增 `src/views/institution/InstitutionPlaceholder.vue`，并在 `src/router/index.js` 新增机构应用/默认应用/密码服务日志三个机构端占位路由（`/institution/apps/org`、`/institution/apps/default`、`/institution/logs/service`），保证父子菜单可完整跳转。
+- 重构 `src/views/institution/InstitutionHsmKeys.vue`：按截图改为机构端专用页面结构，包含 12px 字号搜索区（两行筛选+查询/重置）与下方内容区（工具栏按钮、密钥表格、分页），表格列与操作区样式按原型稿对齐。
+- 执行 `npm run build`，构建通过。
+- 调整 `src/views/institution/InstitutionHsmKeys.vue`：搜索栏 `el-form` 设置 `label-position="left"`，并对 `.el-form-item__label` 增加左对齐样式（`text-align: left; justify-content: flex-start;`），使搜索区域标签左对齐显示。
+- 调整 `src/views/institution/InstitutionHsmKeys.vue`：按“标签后紧跟输入框”去除搜索区多余尺寸限制（删除输入框/下拉框与时间选择器固定宽度），并设置标签不换行（`white-space: nowrap`），保证标签内容同一行显示。
+- 修正 `src/views/institution/InstitutionHsmKeys.vue`：覆盖全局 `el-form-item__label` 固定宽度（`width:auto; min-width:0;`），消除标签与输入框之间过大空白，输入框紧跟标签显示。
+
+## 2026-04-28
+
+- `src/views/cloud-hsm/VirtualHsmManagement.vue`：按“查看详情”截图优化详情弹窗视觉与布局（弹窗宽度调至 660px、内容区与底部内边距收紧、键值项标签左对齐并缩短标签列宽、分块与双列间距压缩、CPU/内存进度条统一为 14px）；状态展示由 `el-tag` 改为纯文本样式，整体更贴近稿图信息密度。
+- `src/views/cloud-hsm/VirtualHsmManagement.vue`：内存文案支持 `memUsedText/memTotalText`，用于按原型显示 `0 B / 0 B`。
+- `src/mock/virtualHsmMock.js`：详情 mock 同步稿图（规格带宽改为 `800Mbps`、CPU/内存使用率改为 `0`、内存显示改为 `0 B / 0 B`），并将网口顺序调整为 `eth0 -> eth1 -> eth2 -> eth3` 以匹配截图表格顺序。
+- `src/views/cloud-hsm/VirtualHsmManagement.vue`：继续按“查看详情”截图微调详情弹窗样式（网口表格去 `border` 改轻量分隔线、分隔线颜色由 `neutral-4` 降到 `neutral-3`、表头灰底变浅、内容区/标题区/底栏内边距进一步收紧、详情项行间距与双列间距微降），保持数据与字段不变，仅优化视觉贴合度（边框不再显得过宽）。
+- `src/mock/virtualHsmMock.js`：在虚机详情 mock 中新增 `connectionCount` 与 `perfMetrics` 字段，补充“连接数”及“密码运算性能”示例数据（含 SM2/SM3/SM4 的吞吐量与平均耗时）。
+- `src/views/cloud-hsm/VirtualHsmManagement.vue`：详情弹窗在“内存使用率”下新增“连接数”项，并增加“打开”链接按钮；点击后弹出“性能查看”弹窗，展示当前连接数与“密码运算项 / 吞吐量(TPS) / 平均耗时(ms)”性能表。
+- `src/views/cloud-hsm/VirtualHsmManagement.vue`：按最新交互将性能入口从“连接数同行按钮”调整为“连接数下方单独一行”，按钮文案改为“查看性能”，点击逻辑保持打开性能弹窗不变。
+- `src/views/cloud-hsm/VirtualHsmManagement.vue`：详情弹窗中“连接数”下方的性能入口补全为明确字段，标签由空白改为“性能项”，并保留“查看性能”按钮打开性能弹窗；性能弹窗继续展示密码运算项性能数据。
+- `src/views/cloud-hsm/VirtualHsmManagement.vue`：按最新需求移除“性能查看”弹窗顶部“当前连接数”展示，仅保留密码运算性能表格内容（密码运算项、吞吐量、平均耗时）。
+- `src/views/cloud-hsm/VirtualHsmManagement.vue`：将详情弹窗“查看性能”按钮样式固定为蓝色文字、透明无底色，并在 hover/focus/active 状态保持无底色，仅调整文字色深浅。
+- `src/views/cloud-hsm/VirtualHsmManagement.vue`：修复详情弹窗内容文字颜色误设为浅色导致“看起来内容消失”的问题（`detail-kv__value` 改回深色 `neutral-10`）；同时增强“查看性能”样式覆盖（含 `!important` 与按钮状态变量），确保始终蓝字且无底色/无边框高亮。
+- `src/views/institution/InstitutionHsmKeys.vue`：实现机构端“密码机密钥”页面的“添加密钥”弹窗（按钮接入打开弹窗），按原型图新增表单项：密钥类型、连接类型、密钥名称、密钥用途（复选）、密钥长度、密钥存储分组类型（单选）、密钥机分组、密钥索引、生效时间（立即生效）、失效时间（长期有效）；补充弹窗头体脚样式与 12px 表单字体；“确定”增加基本校验与原型提示。
+- `src/views/institution/InstitutionHsmKeys.vue`：按“PKI体系密钥”新增参数模型联动——新增“密钥分类（PKI体系密钥）”“参数（设备分组可选）”“特殊参数”字段；密钥类型改为 `DSA` / `Ed25519`，并联动密钥长度与用途：`DSA` 支持 `2048/3072` 且特殊参数输入“密钥长度(L,N)”，`Ed25519` 固定 `256`、用途固定“签名验签”、特殊参数显示“无（参数固定）”；提交时增加 DSA 特殊参数非空校验。
+- `src/views/institution/InstitutionHsmKeys.vue`：按反馈将“密钥分类”从独立字段改为“密钥类型”下拉内分组区分（`el-option-group`）：新增 `PKI体系密钥` 与 `IBC体系密钥` 分组；`DSA/Ed25519` 归入 PKI，新增 `SM9主密钥` 归入 IBC，并同步长度联动映射。
+- `src/views/institution/InstitutionHsmKeys.vue`：在“密钥类型”下拉分组标题前增加彩色方块区分（PKI 使用品牌蓝、IBC 使用成功绿），通过 `popper-class` 定位下拉并为 `el-option-group` 标题添加 `::before` 色块样式。
+- `src/views/institution/InstitutionHsmKeys.vue`：“添加密钥”弹窗中“密钥用途”改为复选多选（`加密解密`/`签名验签`），表单字段由单字符串改为数组 `keyUsages`，切换密钥类型时不再强制覆盖用途；确定时校验至少勾选一项；`SM9主密钥` 与 `Ed25519` 一样禁用密钥长度下拉。
+- `src/views/institution/InstitutionHsmKeys.vue`：按最新规则细化“密钥用途”行为：`DSA` 与 `Ed25519` 类型下用途固定为“签名验签”，仅显示单个已选项并禁用为灰色不可修改；其他类型仍保留用途多选。并保留弹窗内“参数”“特殊参数”两项展示。
+- `src/views/institution/InstitutionHsmKeys.vue`：按最新需求移除“添加密钥”弹窗中的“参数”“特殊参数”两行，同时清理对应表单字段与提交校验（去除 `specialParamLN` 相关逻辑），其余字段与用途联动保持不变。
+- `src/views/institution/InstitutionHsmKeys.vue`：调整“签名验签”禁用态视觉为截图风格：复选框底色/边框/对勾与文案统一灰阶，保持已勾选但不可交互。
+- `src/views/institution/InstitutionHsmKeys.vue`：按最新反馈将“添加密钥”弹窗输入框/下拉框统一加宽（`add-key-field` 由 360px 调整为 520px）；并将“密钥设备分组类型”之前字段（密钥类型、连接类型、密钥名称、密钥长度、密钥用途）标记为必填，提交时补充对应必填校验提示。
+- `src/views/institution/InstitutionHsmKeys.vue`：将“生效时间/失效时间”日期选择框宽度强制对齐为与其他输入框一致（520px），补充 `datetime-row` 下日期控件宽度覆盖，避免在行内布局中被压缩变窄。
+- `src/views/cloud-hsm/VirtualHsmManagement.vue`：按最新需求调整“性能查看”弹窗表格列，移除“平均耗时(ms)”列，仅保留“密码运算项”和“吞吐量(TPS)”。
+- `src/mock/virtualHsmMock.js`：更新虚拟密码机详情中的性能项数据源，密码运算项改为 26 项固定清单（SM2/RSA/SM9 及 SM1/SM4/AES 加解密等），并生成对应吞吐量(TPS)示例值用于展示。
+- `src/views/cloud-hsm/VirtualHsmManagement.vue`：优化“性能查看”弹窗高度，表格增加 `max-height`（320）并启用纵向滚动，弹窗 body 同步设置最大高度与 `overflow-y:auto`，实现内容过多时在弹窗内滚动显示。
+- `src/views/cloud-hsm/VirtualHsmManagement.vue`：修复“性能查看”弹窗外框留白过大问题，补充 `.vsm-perf-dialog.el-dialog { padding: 0; overflow: hidden; }`，并将头部 `margin-right: 0` 调整为 `margin: 0`，去除默认根节点内边距造成的外圈大间距。
+- `src/views/cloud-hsm/VirtualHsmManagement.vue`：按反馈将“性能查看”表格表头背景固定为灰色（`.vsm-perf-dialog .perf-table .el-table__header th.el-table__cell`），与页面视觉风格保持一致。
+- `src/views/cloud-hsm/VirtualHsmManagement.vue`：按反馈将“性能查看”滚动条改为始终显示：性能表格增加 `scrollbar-always-on`，弹窗 body 的纵向溢出由 `auto` 调整为 `scroll`。

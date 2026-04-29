@@ -174,7 +174,7 @@ function toggleFullscreen() {
 }
 
 function logoutPlaceholder() {
-  // 原型占位：后续接入真实鉴权与退出流程
+  router.push('/institution')
 }
 </script>
 

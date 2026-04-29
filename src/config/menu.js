@@ -21,7 +21,7 @@ export const sidebarMenu = [
     icon: IcoCloudHsm,
     children: [
       { title: '宿主机管理', path: '/cloud-hsm/host' },
-      { title: '虚拟密码机管理', path: '/cloud-hsm/virtual-hsm' },
+      { title: '虚拟密码机管理（新）', path: '/cloud-hsm/virtual-hsm' },
       { title: '影像管理', path: '/cloud-hsm/media' },
       { title: 'IP池管理', path: '/cloud-hsm/ip-pool' },
       { title: '第三方接管平台', path: '/cloud-hsm/third-party' },

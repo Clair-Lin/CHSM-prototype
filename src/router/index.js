@@ -10,6 +10,10 @@ import CloudHsmMediaManagement from '../views/cloud-hsm/CloudHsmMediaManagement.
 import IpPoolManagement from '../views/cloud-hsm/IpPoolManagement.vue'
 import OrganizationManagement from '../views/organization/OrganizationManagement.vue'
 import KeysList from '../views/keys/KeysList.vue'
+import InstitutionLayout from '../views/institution/InstitutionLayout.vue'
+import InstitutionHsmKeys from '../views/institution/InstitutionHsmKeys.vue'
+import InstitutionLibraryKeys from '../views/institution/InstitutionLibraryKeys.vue'
+import InstitutionPlaceholder from '../views/institution/InstitutionPlaceholder.vue'
 
 function placeholder(title, section = null) {
   return {
@@ -172,6 +176,43 @@ const routes = [
         path: '/about',
         name: 'About',
         ...placeholder('关于', '关于')
+      }
+    ]
+  },
+  {
+    path: '/institution',
+    component: InstitutionLayout,
+    redirect: '/institution/keys/hsm',
+    children: [
+      {
+        path: '/institution/keys/hsm',
+        name: 'InstitutionHsmKeys',
+        component: InstitutionHsmKeys,
+        meta: { title: '密码机密钥' }
+      },
+      {
+        path: '/institution/keys/library',
+        name: 'InstitutionLibraryKeys',
+        component: InstitutionLibraryKeys,
+        meta: { title: '库内密钥' }
+      },
+      {
+        path: '/institution/apps/org',
+        name: 'InstitutionOrgApp',
+        component: InstitutionPlaceholder,
+        meta: { title: '机构应用' }
+      },
+      {
+        path: '/institution/apps/default',
+        name: 'InstitutionDefaultApp',
+        component: InstitutionPlaceholder,
+        meta: { title: '默认应用' }
+      },
+      {
+        path: '/institution/logs/service',
+        name: 'InstitutionServiceLogs',
+        component: InstitutionPlaceholder,
+        meta: { title: '密码服务日志' }
       }
     ]
   }

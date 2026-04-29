@@ -172,6 +172,44 @@ function gatewayFromIpv4(ipv4) {
   return `${parts[0]}.${parts[1]}.${parts[2]}.1`
 }
 
+function buildPerfMetricsByVm(row) {
+  const perfItems = [
+    'SM2密钥生成',
+    'SM2 签名',
+    'SM2 验证',
+    'SM2 P7签名',
+    'SM2 P7验证',
+    'SM2 加密',
+    'SM2 解密',
+    'RSA 生密钥',
+    'RSA 签名',
+    'RSA 验证',
+    'RSA P7签名',
+    'RSA P7验证',
+    'SM9 生密钥',
+    'SM9 签名',
+    'SM9 验证',
+    'SM9 P7签名',
+    'SM9 P7验证',
+    'SM9 加密',
+    'SM9 解密',
+    'SM9 密钥协商',
+    'SM1 加密运算',
+    'SM4 加密运算',
+    'AES 加密运算',
+    'SM1 解密运算',
+    'SM4 解密运算',
+    'AES 解密运算'
+  ]
+
+  const seed = Number(String(row?.id || '').replace(/\D/g, '')) || 1
+  const base = 900 + seed * 35
+  return perfItems.map((item, idx) => ({
+    item,
+    tps: Math.max(120, base + (perfItems.length - idx) * 27)
+  }))
+}
+
 /**
  * 列表行 → 查看详情弹窗用完整数据（原型：网口 eth0 与列表 IPv4 对齐，其余网口占位）
  * @param {object} row 列表行
@@ -198,11 +236,15 @@ export function getVirtualHsmDetail(row) {
     imageLabel: row.imageLabel,
     version: row.version,
     status: row.status,
-    specText: 'CPU: 2核  内存: 2GB  带宽: 500Mbps',
-    cpuUsagePct: 4.8,
-    memUsagePct: 62.61,
-    memUsedMb: 752.74,
-    memTotalGb: 1.17,
+    specText: 'CPU: 2核  内存: 2GB  带宽: 800Mbps',
+    cpuUsagePct: 0,
+    memUsagePct: 0,
+    memUsedMb: 0,
+    memTotalGb: 0,
+    memUsedText: '0 B',
+    memTotalText: '0 B',
+    connectionCount: row.hasCryptoData ? 68 : 24,
+    perfMetrics: buildPerfMetricsByVm(row),
     description: '',
     hostName: row.hostName,
     manufacturer: row.manufacturer,
@@ -213,10 +255,10 @@ export function getVirtualHsmDetail(row) {
     monitorPort: 8100,
     kmipMgmtPort: 8089,
     interfaces: [
-      iface('eth3', '--', '--', '--'),
-      iface('eth2', '--', '--', '--'),
+      iface('eth0', hasIp ? ip4 : '--', hasIp ? mask4 : '--', hasIp ? gw : '--'),
       iface('eth1', '--', '--', '--'),
-      iface('eth0', hasIp ? ip4 : '--', hasIp ? mask4 : '--', hasIp ? gw : '--')
+      iface('eth2', '--', '--', '--'),
+      iface('eth3', '--', '--', '--')
     ]
   }
 }

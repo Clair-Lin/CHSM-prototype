@@ -117,7 +117,7 @@
     <el-dialog
       v-model="detailVisible"
       title="查看详情"
-      width="800px"
+      width="660px"
       class="vsm-detail-dialog"
       destroy-on-close
       align-center
@@ -144,8 +144,8 @@
           <div class="detail-kv">
             <span class="detail-kv__label">状态</span>
             <span class="detail-kv__value">
-              <el-tag v-if="detailRecord.status === 'normal'" type="success" size="small">正常</el-tag>
-              <el-tag v-else type="info" size="small">--</el-tag>
+              <span v-if="detailRecord.status === 'normal'" class="detail-status detail-status--ok">正常</span>
+              <span v-else class="detail-status">--</span>
             </span>
           </div>
           <div class="detail-kv">
@@ -171,13 +171,27 @@
           <div class="detail-progress-wrap">
             <el-progress
               :percentage="Math.min(100, detailRecord.memUsagePct)"
-              :stroke-width="18"
+              :stroke-width="14"
               text-inside
               :format="() => `${detailRecord.memUsagePct}%`"
             />
             <div class="detail-mem-foot">
-              内存量: {{ detailRecord.memUsedMb }} MB / {{ detailRecord.memTotalGb }} GB
+              内存量: {{ detailRecord.memUsedText || `${detailRecord.memUsedMb} MB` }} / {{ detailRecord.memTotalText || `${detailRecord.memTotalGb} GB` }}
             </div>
+          </div>
+        </div>
+        <div class="detail-block detail-kv detail-kv--conn">
+          <span class="detail-kv__label">连接数（新）</span>
+          <div class="detail-kv__value">
+            {{ detailRecord.connectionCount ?? 0 }}
+          </div>
+        </div>
+        <div class="detail-block detail-kv detail-kv--perf-link">
+          <span class="detail-kv__label">性能（新）</span>
+          <div class="detail-kv__value">
+            <el-button type="primary" link class="detail-open-perf-btn" @click="openPerfDialog">
+              查看性能
+            </el-button>
           </div>
         </div>
         <div class="detail-block detail-kv detail-kv--single">
@@ -225,7 +239,7 @@
         </div>
 
         <div class="detail-block">
-          <el-table :data="detailRecord.interfaces" class="detail-net-table" border size="small">
+          <el-table :data="detailRecord.interfaces" class="detail-net-table" size="small">
             <el-table-column prop="id" label="网口标识" width="100" align="center" />
             <el-table-column label="IP地址" min-width="160">
               <template #default="{ row: iface }">
@@ -256,6 +270,27 @@
       </div>
       <template #footer>
         <el-button @click="detailVisible = false">取消</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog
+      v-model="perfVisible"
+      title="性能查看"
+      width="560px"
+      class="vsm-perf-dialog"
+      append-to-body
+      destroy-on-close
+      align-center
+      @closed="onPerfDialogClosed"
+    >
+      <div class="perf-body">
+        <el-table :data="perfRows" size="small" class="perf-table" max-height="320" scrollbar-always-on>
+          <el-table-column prop="item" label="密码运算项" min-width="160" />
+          <el-table-column prop="tps" label="TPS" min-width="120"  />
+        </el-table>
+      </div>
+      <template #footer>
+        <el-button @click="perfVisible = false">关闭</el-button>
       </template>
     </el-dialog>
 
@@ -933,6 +968,8 @@ function onBatchDelete() {
 
 const detailVisible = ref(false)
 const detailRecord = ref(null)
+const perfVisible = ref(false)
+const perfRows = computed(() => detailRecord.value?.perfMetrics || [])
 
 function onDetail(row) {
   detailRecord.value = getVirtualHsmDetail(row)
@@ -941,6 +978,16 @@ function onDetail(row) {
 
 function onDetailClosed() {
   detailRecord.value = null
+  perfVisible.value = false
+}
+
+function openPerfDialog() {
+  if (!detailRecord.value) return
+  perfVisible.value = true
+}
+
+function onPerfDialogClosed() {
+  perfVisible.value = false
 }
 
 function onEdit(row) {
@@ -1821,15 +1868,14 @@ function onMoreCommand(cmd, row) {
 
 /* —— 查看详情弹窗 —— */
 .detail-body {
-  --vsm-detail-progress-w: 400px;
-  max-height: min(70vh, 640px);
+  --vsm-detail-progress-w: 360px;
+  max-height: min(68vh, 600px);
   overflow-y: auto;
-  /* padding: 0 4px 6px 0; */
-  font-size: 13px;
+  font-size: 12px;
 }
 
 .detail-block {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .detail-block:last-child {
@@ -1842,10 +1888,10 @@ function onMoreCommand(cmd, row) {
 
 .detail-kv {
   display: grid;
-  grid-template-columns: 128px 1fr;
-  column-gap: 12px;
+  grid-template-columns: 96px minmax(0, 1fr);
+  column-gap: 8px;
   align-items: start;
-  padding: 4px 0;
+  padding: 2px 0;
   line-height: 1.5;
 }
 
@@ -1855,7 +1901,7 @@ function onMoreCommand(cmd, row) {
 
 .detail-kv__label {
   color: var(--neutral-8);
-  text-align: right;
+  text-align: left;
   font-size: 12px;
 }
 
@@ -1867,7 +1913,7 @@ function onMoreCommand(cmd, row) {
 
 .detail-kv--progress {
   align-items: center;
-  padding: 2px 0;
+  padding: 0;
 }
 
 .detail-kv--progress-mem {
@@ -1875,7 +1921,38 @@ function onMoreCommand(cmd, row) {
 }
 
 .detail-kv--progress-mem .detail-progress-wrap {
-  padding-top: 2px;
+  padding-top: 0;
+}
+
+.detail-kv--conn {
+  align-items: center;
+}
+
+.detail-kv--perf-link {
+  margin-top: -2px;
+}
+
+.detail-open-perf-btn {
+  font-size: 12px;
+  padding: 0;
+  min-height: 0;
+  height: auto;
+  color: var(--brand-6) !important;
+  background-color: transparent !important;
+  --el-button-hover-bg-color: transparent;
+  --el-button-active-bg-color: transparent;
+  --el-button-focus-bg-color: transparent;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.detail-open-perf-btn:hover,
+.detail-open-perf-btn:focus,
+.detail-open-perf-btn:active {
+  color: var(--brand-5) !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
 }
 
 .detail-progress-wrap {
@@ -1899,7 +1976,7 @@ function onMoreCommand(cmd, row) {
 }
 
 .detail-mem-foot {
-  margin-top: 6px;
+  margin-top: 4px;
   font-size: 12px;
   color: var(--neutral-8);
 }
@@ -1907,12 +1984,23 @@ function onMoreCommand(cmd, row) {
 .detail-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px 28px;
+  gap: 8px 18px;
   align-items: start;
 }
 
 .detail-col .detail-kv {
-  padding: 4px 0;
+  padding: 3px 0;
+}
+
+.detail-status {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.detail-status--ok {
+  color: var(--success-7);
 }
 
 .detail-ip-cell {
@@ -1928,12 +2016,25 @@ function onMoreCommand(cmd, row) {
 
 .detail-net-table {
   font-size: 12px;
-  --el-table-border-color: var(--neutral-4);
+  --el-table-border-color: var(--neutral-3);
+}
+
+.detail-net-table :deep(.el-table__inner-wrapper::before) {
+  display: none;
 }
 
 .detail-net-table :deep(thead .el-table__cell) {
-  background-color: #f5f5f5 !important;
+  background-color: #f7f8fa !important;
   color: var(--neutral-10) !important;
+  border-bottom: 1px solid var(--neutral-3) !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+.detail-net-table :deep(tbody .el-table__cell) {
+  border-bottom: 1px solid var(--neutral-3) !important;
+  border-left: none !important;
+  border-right: none !important;
 }
 
 /* —— 迁移虚拟机向导 —— */
@@ -2360,9 +2461,9 @@ function onMoreCommand(cmd, row) {
 
 .vsm-detail-dialog .el-dialog__header {
   margin-right: 0;
-  padding: 14px 16px;
+  padding: 12px 14px;
   background: var(--neutral-2);
-  border-bottom: 1px solid var(--neutral-4);
+  border-bottom: 1px solid var(--neutral-3);
 }
 
 .vsm-detail-dialog .el-dialog__title {
@@ -2372,12 +2473,12 @@ function onMoreCommand(cmd, row) {
 }
 
 .vsm-detail-dialog .el-dialog__body {
-  padding: 16px 20px 8px;
+  padding: 12px 14px 8px;
 }
 
 .vsm-detail-dialog .el-dialog__footer {
-  padding: 10px 20px 16px;
-  border-top: 1px solid var(--neutral-4);
+  padding: 9px 14px 10px;
+  border-top: 1px solid var(--neutral-3);
 }
 
 .vsm-clone-add-group-dialog.el-dialog {
@@ -2510,5 +2611,36 @@ function onMoreCommand(cmd, row) {
 .migrate-vm-picker-dialog .el-dialog__footer {
   padding: 8px 14px 12px;
   border-top: 1px solid var(--neutral-4);
+}
+
+.vsm-perf-dialog.el-dialog {
+  padding: 0;
+  overflow: hidden;
+}
+
+.vsm-perf-dialog .el-dialog__header {
+  margin: 0;
+  padding: 10px 14px;
+  background: var(--neutral-2);
+  border-bottom: 1px solid var(--neutral-3);
+}
+
+.vsm-perf-dialog .el-dialog__body {
+  padding: 12px 14px 8px;
+  max-height: 380px;
+  overflow-y: scroll;
+}
+
+.vsm-perf-dialog .el-dialog__footer {
+  padding: 8px 14px 12px;
+  border-top: 1px solid var(--neutral-3);
+}
+
+.perf-table {
+  font-size: 12px;
+}
+
+.vsm-perf-dialog .perf-table .el-table__header th.el-table__cell {
+  background: var(--neutral-2);
 }
 </style>
